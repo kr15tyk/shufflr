@@ -113,6 +113,7 @@ model Team {
   matchesAsA   Match[]      @relation("TeamA")
   matchesAsB   Match[]      @relation("TeamB")
 
+  @@unique([id, seasonId])
   @@index([seasonId])
   @@index([organizationId])
 }
@@ -155,14 +156,14 @@ model Match {
   status      MatchStatus @default(SCHEDULED)
 
   season Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  teamA  Team         @relation("TeamA", fields: [teamAId], references: [id])
-  teamB  Team         @relation("TeamB", fields: [teamBId], references: [id])
+  teamA  Team         @relation("TeamA", fields: [teamAId, seasonId], references: [id, seasonId])
+  teamB  Team         @relation("TeamB", fields: [teamBId, seasonId], references: [id, seasonId])
   court  Court        @relation(fields: [courtId], references: [id])
   result MatchResult?
 
   @@index([seasonId])
-  @@index([teamAId])
-  @@index([teamBId])
+  @@index([teamAId, seasonId])
+  @@index([teamBId, seasonId])
   @@index([courtId])
 }
 
@@ -178,8 +179,6 @@ model MatchResult {
   match       Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
   submittedBy User  @relation("SubmittedResults", fields: [submittedById], references: [id])
   approvedBy  User? @relation("ApprovedResults", fields: [approvedById], references: [id])
-
-  @@index([matchId])
 }
 
 model Notification {

@@ -2,6 +2,12 @@ import { PrismaClient, UserRole, SeasonStatus } from "../generated/prisma";
 
 const prisma = new PrismaClient();
 
+// Guard: prevent accidental seed runs in production
+if (process.env["NODE_ENV"] === "production") {
+  console.error("Seed script must not be run in production.");
+  process.exit(1);
+}
+
 async function main() {
   // ── Organization ──────────────────────────────────────────────────────────
   const org = await prisma.organization.upsert({
@@ -19,13 +25,22 @@ async function main() {
   console.log(`Organization: ${org.name} (${org.id})`);
 
   // ── Admin user ────────────────────────────────────────────────────────────
+  // Provide SEED_ADMIN_PASSWORD_HASH as a bcrypt hash via the environment.
+  // Generate one with: node -e "require('bcrypt').hash('yourpw',10).then(console.log)"
+  const passwordHash = process.env["SEED_ADMIN_PASSWORD_HASH"];
+  if (!passwordHash) {
+    throw new Error(
+      "SEED_ADMIN_PASSWORD_HASH environment variable is required. " +
+        "Set it to a bcrypt hash of the desired admin password."
+    );
+  }
+
   const admin = await prisma.user.upsert({
     where: { email_organizationId: { email: "admin@demo.shufflr.app", organizationId: org.id } },
     update: {},
     create: {
       email: "admin@demo.shufflr.app",
-      // bcrypt hash of "Shufflr@Demo2026!" – change this before deploying to production
-      passwordHash: "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      passwordHash,
       name: "Demo Admin",
       role: UserRole.ADMIN,
       organizationId: org.id,

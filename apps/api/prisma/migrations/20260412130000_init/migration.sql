@@ -148,6 +148,9 @@ CREATE INDEX "Team_seasonId_idx" ON "Team"("seasonId");
 CREATE INDEX "Team_organizationId_idx" ON "Team"("organizationId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Team_id_seasonId_key" ON "Team"("id", "seasonId");
+
+-- CreateIndex
 CREATE INDEX "Player_teamId_idx" ON "Player"("teamId");
 
 -- CreateIndex
@@ -163,19 +166,16 @@ CREATE INDEX "Court_organizationId_idx" ON "Court"("organizationId");
 CREATE INDEX "Match_seasonId_idx" ON "Match"("seasonId");
 
 -- CreateIndex
-CREATE INDEX "Match_teamAId_idx" ON "Match"("teamAId");
+CREATE INDEX "Match_teamAId_seasonId_idx" ON "Match"("teamAId", "seasonId");
 
 -- CreateIndex
-CREATE INDEX "Match_teamBId_idx" ON "Match"("teamBId");
+CREATE INDEX "Match_teamBId_seasonId_idx" ON "Match"("teamBId", "seasonId");
 
 -- CreateIndex
 CREATE INDEX "Match_courtId_idx" ON "Match"("courtId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "MatchResult_matchId_key" ON "MatchResult"("matchId");
-
--- CreateIndex
-CREATE INDEX "MatchResult_matchId_idx" ON "MatchResult"("matchId");
 
 -- CreateIndex
 CREATE INDEX "Notification_userId_idx" ON "Notification"("userId");
@@ -211,10 +211,10 @@ ALTER TABLE "Court" ADD CONSTRAINT "Court_organizationId_fkey" FOREIGN KEY ("org
 ALTER TABLE "Match" ADD CONSTRAINT "Match_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Match" ADD CONSTRAINT "Match_teamAId_fkey" FOREIGN KEY ("teamAId") REFERENCES "Team"("id") ON UPDATE CASCADE;
+ALTER TABLE "Match" ADD CONSTRAINT "Match_teamAId_seasonId_fkey" FOREIGN KEY ("teamAId", "seasonId") REFERENCES "Team"("id", "seasonId") ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Match" ADD CONSTRAINT "Match_teamBId_fkey" FOREIGN KEY ("teamBId") REFERENCES "Team"("id") ON UPDATE CASCADE;
+ALTER TABLE "Match" ADD CONSTRAINT "Match_teamBId_seasonId_fkey" FOREIGN KEY ("teamBId", "seasonId") REFERENCES "Team"("id", "seasonId") ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Match" ADD CONSTRAINT "Match_courtId_fkey" FOREIGN KEY ("courtId") REFERENCES "Court"("id") ON UPDATE CASCADE;
