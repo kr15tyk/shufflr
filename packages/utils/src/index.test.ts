@@ -16,6 +16,11 @@ describe('truncate', () => {
   it('truncates and appends ellipsis when too long', () => {
     expect(truncate('hello world', 8)).toBe('hello...');
   });
+
+  it('slices without ellipsis when maxLength <= 3', () => {
+    expect(truncate('hello', 2)).toBe('he');
+    expect(truncate('hello', 3)).toBe('hel');
+  });
 });
 
 describe('toKebabCase', () => {

@@ -123,7 +123,7 @@ TypeScript **strict mode** is enabled in all packages and apps via `@shufflr/con
 
 ## Linting & Formatting
 
-ESLint and Prettier are configured globally. Every app/package extends `@shufflr/config/eslint-preset.js` and `@shufflr/config/prettier.config.js`.
+ESLint and Prettier are configured globally. Every app/package extends `@shufflr/config/eslint-preset.js`, and Prettier formatting is driven by the root `.prettierrc`.
 
 ```bash
 # Lint everything
