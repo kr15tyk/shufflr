@@ -10,12 +10,12 @@ export class OrganizationService {
     return { id };
   }
 
-  create(data: Record<string, unknown>) {
-    return data;
+  create(_data: Record<string, unknown>) {
+    return { id: '' };
   }
 
-  update(id: string, data: Record<string, unknown>) {
-    return { id, ...data };
+  update(id: string, _data: Record<string, unknown>) {
+    return { id };
   }
 
   remove(id: string) {

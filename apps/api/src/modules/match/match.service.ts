@@ -10,16 +10,16 @@ export class MatchService {
     return { id };
   }
 
-  generateSchedule(data: Record<string, unknown>) {
-    return data;
+  generateSchedule(_data: Record<string, unknown>) {
+    return { id: '' };
   }
 
-  enterScore(id: string, score: Record<string, unknown>) {
-    return { id, ...score };
+  enterScore(id: string, _score: Record<string, unknown>) {
+    return { id };
   }
 
-  update(id: string, data: Record<string, unknown>) {
-    return { id, ...data };
+  update(id: string, _data: Record<string, unknown>) {
+    return { id };
   }
 
   remove(id: string) {
