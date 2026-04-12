@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
-import type { ApiResponse } from '@shufflr/types';
-
 @Injectable()
 export class AppService {
-  getStatus(): ApiResponse<{ name: string; version: string }> {
+  getStatus() {
     return {
       success: true,
       data: {

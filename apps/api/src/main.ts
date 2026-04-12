@@ -1,16 +1,28 @@
 import { NestFactory } from '@nestjs/core';
-
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { AppModule } from './app.module';
 
-async function bootstrap(): Promise<void> {
+async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const port = process.env.PORT ?? 3001;
 
   app.enableCors();
   app.setGlobalPrefix('api');
 
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
+
+  const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  console.log(`🚀 API is running on: http://localhost:${port}/api`);
 }
 
-void bootstrap();
+bootstrap();
