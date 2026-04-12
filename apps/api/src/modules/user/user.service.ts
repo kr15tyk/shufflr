@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { Role } from '../../common/enums/role.enum';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
 @Injectable()
 export class UserService {
@@ -10,11 +12,11 @@ export class UserService {
     return { id };
   }
 
-  create(_data: Record<string, unknown>) {
+  create(_dto: CreateUserDto) {
     return { id: '' };
   }
 
-  update(id: string, _data: Record<string, unknown>) {
+  update(id: string, _dto: UpdateUserDto) {
     return { id };
   }
 
@@ -22,7 +24,7 @@ export class UserService {
     return { id };
   }
 
-  assignRole(id: string, role: string) {
+  assignRole(id: string, role: Role) {
     return { id, role };
   }
 }

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CreateLeagueDto, UpdateLeagueDto } from './dto/league.dto';
 
 @Injectable()
 export class LeagueService {
@@ -10,11 +11,11 @@ export class LeagueService {
     return { id };
   }
 
-  create(_data: Record<string, unknown>) {
+  create(_dto: CreateLeagueDto) {
     return { id: '' };
   }
 
-  update(id: string, _data: Record<string, unknown>) {
+  update(id: string, _dto: UpdateLeagueDto) {
     return { id };
   }
 

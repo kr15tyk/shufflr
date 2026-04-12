@@ -2,11 +2,12 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
+import { Role } from '../../../common/enums/role.enum';
 
 export interface JwtPayload {
   sub: string;
   email: string;
-  roles: string[];
+  roles: Role[];
 }
 
 @Injectable()

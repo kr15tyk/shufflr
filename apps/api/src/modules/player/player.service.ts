@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CreatePlayerDto, UpdatePlayerDto } from './dto/player.dto';
 
 @Injectable()
 export class PlayerService {
@@ -10,11 +11,11 @@ export class PlayerService {
     return { id };
   }
 
-  create(_data: Record<string, unknown>) {
+  create(_dto: CreatePlayerDto) {
     return { id: '' };
   }
 
-  update(id: string, _data: Record<string, unknown>) {
+  update(id: string, _dto: UpdatePlayerDto) {
     return { id };
   }
 

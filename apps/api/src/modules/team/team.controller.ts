@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { TeamService } from './team.service';
+import { CreateTeamDto, UpdateTeamDto } from './dto/team.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -31,14 +32,14 @@ export class TeamController {
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN, Role.LEAGUE_ADMIN)
-  create(@Body() body: Record<string, unknown>) {
-    return this.teamService.create(body);
+  create(@Body() dto: CreateTeamDto) {
+    return this.teamService.create(dto);
   }
 
   @Put(':id')
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN, Role.LEAGUE_ADMIN)
-  update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.teamService.update(id, body);
+  update(@Param('id') id: string, @Body() dto: UpdateTeamDto) {
+    return this.teamService.update(id, dto);
   }
 
   @Delete(':id')

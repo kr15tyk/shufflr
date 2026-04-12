@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CreateCourtDto, UpdateCourtDto } from './dto/court.dto';
 
 @Injectable()
 export class CourtService {
@@ -10,11 +11,11 @@ export class CourtService {
     return { id };
   }
 
-  create(_data: Record<string, unknown>) {
+  create(_dto: CreateCourtDto) {
     return { id: '' };
   }
 
-  update(id: string, _data: Record<string, unknown>) {
+  update(id: string, _dto: UpdateCourtDto) {
     return { id };
   }
 

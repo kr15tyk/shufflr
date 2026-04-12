@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PlayerService } from './player.service';
+import { CreatePlayerDto, UpdatePlayerDto } from './dto/player.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -31,14 +32,14 @@ export class PlayerController {
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN, Role.LEAGUE_ADMIN)
-  create(@Body() body: Record<string, unknown>) {
-    return this.playerService.create(body);
+  create(@Body() dto: CreatePlayerDto) {
+    return this.playerService.create(dto);
   }
 
   @Put(':id')
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN, Role.LEAGUE_ADMIN)
-  update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.playerService.update(id, body);
+  update(@Param('id') id: string, @Body() dto: UpdatePlayerDto) {
+    return this.playerService.update(id, dto);
   }
 
   @Delete(':id')

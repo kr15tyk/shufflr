@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CreateTeamDto, UpdateTeamDto } from './dto/team.dto';
 
 @Injectable()
 export class TeamService {
@@ -10,11 +11,11 @@ export class TeamService {
     return { id };
   }
 
-  create(_data: Record<string, unknown>) {
+  create(_dto: CreateTeamDto) {
     return { id: '' };
   }
 
-  update(id: string, _data: Record<string, unknown>) {
+  update(id: string, _dto: UpdateTeamDto) {
     return { id };
   }
 

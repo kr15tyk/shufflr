@@ -9,6 +9,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { AssignRoleDto } from './dto/assign-role.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -33,14 +35,14 @@ export class UserController {
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN)
-  create(@Body() body: Record<string, unknown>) {
-    return this.userService.create(body);
+  create(@Body() dto: CreateUserDto) {
+    return this.userService.create(dto);
   }
 
   @Put(':id')
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN)
-  update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.userService.update(id, body);
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.userService.update(id, dto);
   }
 
   @Delete(':id')
@@ -51,7 +53,7 @@ export class UserController {
 
   @Post(':id/roles')
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN)
-  assignRole(@Param('id') id: string, @Body('role') role: string) {
-    return this.userService.assignRole(id, role);
+  assignRole(@Param('id') id: string, @Body() dto: AssignRoleDto) {
+    return this.userService.assignRole(id, dto.role);
   }
 }

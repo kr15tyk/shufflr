@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
+import { Role } from '../../common/enums/role.enum';
 
 describe('UserService', () => {
   let service: UserService;
@@ -20,8 +21,8 @@ describe('UserService', () => {
     expect(service.findAll()).toEqual([]);
   });
 
-  it('should assign a role', () => {
-    const result = service.assignRole('user-1', 'PLAYER');
-    expect(result).toEqual({ id: 'user-1', role: 'PLAYER' });
+  it('should assign a role using the Role enum', () => {
+    const result = service.assignRole('user-1', Role.PLAYER);
+    expect(result).toEqual({ id: 'user-1', role: Role.PLAYER });
   });
 });

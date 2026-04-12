@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { LeagueService } from './league.service';
+import { CreateLeagueDto, UpdateLeagueDto } from './dto/league.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -31,14 +32,14 @@ export class LeagueController {
 
   @Post()
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN)
-  create(@Body() body: Record<string, unknown>) {
-    return this.leagueService.create(body);
+  create(@Body() dto: CreateLeagueDto) {
+    return this.leagueService.create(dto);
   }
 
   @Put(':id')
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN, Role.LEAGUE_ADMIN)
-  update(@Param('id') id: string, @Body() body: Record<string, unknown>) {
-    return this.leagueService.update(id, body);
+  update(@Param('id') id: string, @Body() dto: UpdateLeagueDto) {
+    return this.leagueService.update(id, dto);
   }
 
   @Delete(':id')

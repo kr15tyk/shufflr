@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { CreateSeasonDto, UpdateSeasonDto } from './dto/season.dto';
 
 @Injectable()
 export class SeasonService {
@@ -10,11 +11,11 @@ export class SeasonService {
     return { id };
   }
 
-  create(_data: Record<string, unknown>) {
+  create(_dto: CreateSeasonDto) {
     return { id: '' };
   }
 
-  update(id: string, _data: Record<string, unknown>) {
+  update(id: string, _dto: UpdateSeasonDto) {
     return { id };
   }
 
