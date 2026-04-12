@@ -1,0 +1,196 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ──────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  PLAYER
+}
+
+enum SeasonStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum MatchStatus {
+  SCHEDULED
+  COMPLETED
+  FORFEITED
+  POSTPONED
+}
+
+// ──────────────────────────────────────────────
+// Models
+// ──────────────────────────────────────────────
+
+model Organization {
+  id           String   @id @default(uuid())
+  name         String
+  subdomain    String   @unique
+  logoUrl      String?
+  primaryColor String?
+  contactEmail String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users   User[]
+  leagues League[]
+  teams   Team[]
+  courts  Court[]
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String
+  passwordHash   String
+  name           String
+  role           UserRole @default(PLAYER)
+  organizationId String
+  createdAt      DateTime @default(now())
+
+  organization     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  players          Player[]
+  submittedResults MatchResult[]  @relation("SubmittedResults")
+  approvedResults  MatchResult[]  @relation("ApprovedResults")
+  notifications    Notification[]
+
+  @@unique([email, organizationId])
+  @@index([organizationId])
+}
+
+model League {
+  id             String   @id @default(uuid())
+  name           String
+  organizationId String
+  format         String
+  scoringRules   Json
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  seasons      Season[]
+
+  @@index([organizationId])
+}
+
+model Season {
+  id        String       @id @default(uuid())
+  leagueId  String
+  startDate DateTime
+  endDate   DateTime
+  status    SeasonStatus @default(DRAFT)
+
+  league  League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  teams   Team[]
+  players Player[]
+  matches Match[]
+
+  @@index([leagueId])
+}
+
+model Team {
+  id             String @id @default(uuid())
+  name           String
+  seasonId       String
+  organizationId String
+
+  season       Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  players      Player[]
+  matchesAsA   Match[]      @relation("TeamA")
+  matchesAsB   Match[]      @relation("TeamB")
+
+  @@index([seasonId])
+  @@index([organizationId])
+}
+
+model Player {
+  id       String @id @default(uuid())
+  userId   String
+  teamId   String
+  seasonId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seasonId])
+  @@index([teamId])
+  @@index([seasonId])
+}
+
+model Court {
+  id             String  @id @default(uuid())
+  organizationId String
+  name           String
+  surfaceType    String
+  isActive       Boolean @default(true)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  matches      Match[]
+
+  @@index([organizationId])
+}
+
+model Match {
+  id          String      @id @default(uuid())
+  seasonId    String
+  teamAId     String
+  teamBId     String
+  courtId     String
+  scheduledAt DateTime
+  status      MatchStatus @default(SCHEDULED)
+
+  season Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  teamA  Team         @relation("TeamA", fields: [teamAId], references: [id])
+  teamB  Team         @relation("TeamB", fields: [teamBId], references: [id])
+  court  Court        @relation(fields: [courtId], references: [id])
+  result MatchResult?
+
+  @@index([seasonId])
+  @@index([teamAId])
+  @@index([teamBId])
+  @@index([courtId])
+}
+
+model MatchResult {
+  id            String   @id @default(uuid())
+  matchId       String   @unique
+  scoreA        Int
+  scoreB        Int
+  submittedById String
+  approvedById  String?
+  createdAt     DateTime @default(now())
+
+  match       Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  submittedBy User  @relation("SubmittedResults", fields: [submittedById], references: [id])
+  approvedBy  User? @relation("ApprovedResults", fields: [approvedById], references: [id])
+
+  @@index([matchId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
