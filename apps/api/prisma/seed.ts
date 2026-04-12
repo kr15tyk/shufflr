@@ -24,8 +24,8 @@ async function main() {
     update: {},
     create: {
       email: "admin@demo.shufflr.app",
-      // bcrypt hash placeholder – replace with a real hash in production
-      passwordHash: "$2b$10$placeholderHashReplaceBeforeDeployment",
+      // bcrypt hash of "Shufflr@Demo2026!" – change this before deploying to production
+      passwordHash: "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
       name: "Demo Admin",
       role: UserRole.ADMIN,
       organizationId: org.id,
@@ -76,14 +76,14 @@ async function main() {
     { name: "Court 3", surfaceType: "hard" },
   ];
 
-  for (const data of courtData) {
+  for (const [index, data] of courtData.entries()) {
     const court = await prisma.court.upsert({
       where: {
-        id: `00000000-0000-0000-0000-00000000000${courtData.indexOf(data) + 3}`,
+        id: `00000000-0000-0000-0000-00000000000${index + 3}`,
       },
       update: {},
       create: {
-        id: `00000000-0000-0000-0000-00000000000${courtData.indexOf(data) + 3}`,
+        id: `00000000-0000-0000-0000-00000000000${index + 3}`,
         organizationId: org.id,
         name: data.name,
         surfaceType: data.surfaceType,
