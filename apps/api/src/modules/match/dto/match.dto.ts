@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsInt, IsDateString } from 'class-validator';
 
 export class GenerateScheduleDto {
   @IsString()
@@ -10,11 +10,11 @@ export class GenerateScheduleDto {
 }
 
 export class EnterScoreDto {
-  @IsString()
-  homeScore!: string;
+  @IsInt()
+  homeScore!: number;
 
-  @IsString()
-  awayScore!: string;
+  @IsInt()
+  awayScore!: number;
 }
 
 export class UpdateMatchDto {
@@ -22,7 +22,7 @@ export class UpdateMatchDto {
   @IsOptional()
   courtId?: string;
 
-  @IsString()
+  @IsDateString()
   @IsOptional()
   scheduledAt?: string;
 }
