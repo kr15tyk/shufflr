@@ -9,6 +9,17 @@ out/
 .next/
 .nuxt/
 
+# TypeScript compiled outputs (alongside source in non-dist dirs)
+**/*.js.map
+**/*.d.ts.map
+# Allow JS config files (e.g., .eslintrc.js, babel.config.js, prettier.config.js)
+!**/.eslintrc.js
+!**/babel.config.js
+!**/prettier.config.js
+!**/jest.config.js
+!**/vite.config.js
+!**/packages/config/index.js
+
 # Environment files
 .env
 .env.local
