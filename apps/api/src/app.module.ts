@@ -1,5 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { OrganizationModule } from './modules/organization/organization.module';
 import { UserModule } from './modules/user/user.module';
@@ -10,6 +12,7 @@ import { PlayerModule } from './modules/player/player.module';
 import { CourtModule } from './modules/court/court.module';
 import { MatchModule } from './modules/match/match.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { HealthModule } from './health/health.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 
 @Module({
@@ -27,7 +30,10 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
     CourtModule,
     MatchModule,
     NotificationModule,
+    HealthModule,
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
