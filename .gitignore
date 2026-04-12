@@ -250,6 +250,13 @@ PublishScripts/
 *.nuget.props
 *.nuget.targets
 
+# ─── Turborepo workspace packages (must not be ignored by the NuGet rule above) ─
+!/packages/
+!/packages/**
+# Re-apply exclusions for build artifacts inside packages
+packages/**/dist/
+packages/**/.turbo/
+
 # Microsoft Azure Build Output
 csx/
 *.build.csdef
