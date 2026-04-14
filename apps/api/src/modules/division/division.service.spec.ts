@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DivisionService } from './division.service';
-import { DivisionFormat } from './dto/division.dto';
 
 describe('DivisionService', () => {
   let service: DivisionService;
@@ -34,7 +33,7 @@ describe('DivisionService', () => {
       const dto = {
         name: 'Monday Division',
         slug: 'monday',
-        format: DivisionFormat.TEAMS,
+        format: 'TEAMS' as const,
       };
       const result = service.create('season-1', dto);
       expect(result).toMatchObject({ seasonId: 'season-1' });

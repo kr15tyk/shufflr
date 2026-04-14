@@ -23,6 +23,9 @@ ALTER TABLE "Team" ADD COLUMN "divisionId" TEXT NOT NULL;
 ALTER TABLE "Match" ADD COLUMN "divisionId" TEXT NOT NULL;
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Division_id_seasonId_key" ON "Division"("id", "seasonId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Division_seasonId_slug_key" ON "Division"("seasonId", "slug");
 
 -- CreateIndex
@@ -35,7 +38,7 @@ CREATE INDEX "Match_divisionId_idx" ON "Match"("divisionId");
 ALTER TABLE "Division" ADD CONSTRAINT "Division_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Team" ADD CONSTRAINT "Team_divisionId_fkey" FOREIGN KEY ("divisionId") REFERENCES "Division"("id") ON UPDATE CASCADE;
+ALTER TABLE "Team" ADD CONSTRAINT "Team_divisionId_seasonId_fkey" FOREIGN KEY ("divisionId", "seasonId") REFERENCES "Division"("id", "seasonId") ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Match" ADD CONSTRAINT "Match_divisionId_fkey" FOREIGN KEY ("divisionId") REFERENCES "Division"("id") ON UPDATE CASCADE;
+ALTER TABLE "Match" ADD CONSTRAINT "Match_divisionId_seasonId_fkey" FOREIGN KEY ("divisionId", "seasonId") REFERENCES "Division"("id", "seasonId") ON UPDATE CASCADE;
