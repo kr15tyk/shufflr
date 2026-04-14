@@ -43,3 +43,12 @@ test-results/
 
 # Local package manager artifacts
 .pnpm-store/
+
+# Turbo / TypeScript cache
+.turbo/
+.cache/
+*.tsbuildinfo
+
+# Platform-specific local config
+.vercel/
+.codespaces/
