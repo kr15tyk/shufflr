@@ -11,6 +11,7 @@ import { TeamModule } from './modules/team/team.module';
 import { PlayerModule } from './modules/player/player.module';
 import { CourtModule } from './modules/court/court.module';
 import { MatchModule } from './modules/match/match.module';
+import { DivisionModule } from './modules/division/division.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { HealthModule } from './health/health.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
@@ -29,6 +30,7 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
     PlayerModule,
     CourtModule,
     MatchModule,
+    DivisionModule,
     NotificationModule,
     HealthModule,
   ],

@@ -33,6 +33,11 @@ enum MatchStatus {
   POSTPONED
 }
 
+enum DivisionFormat {
+  TEAMS
+  SINGLES
+}
+
 // ──────────────────────────────────────────────
 // Models
 // ──────────────────────────────────────────────
@@ -93,12 +98,32 @@ model Season {
   endDate   DateTime
   status    SeasonStatus @default(DRAFT)
 
-  league  League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
-  teams   Team[]
-  players Player[]
-  matches Match[]
+  league    League     @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  teams     Team[]
+  players   Player[]
+  matches   Match[]
+  divisions Division[]
 
   @@index([leagueId])
+}
+
+model Division {
+  id         String         @id @default(uuid())
+  seasonId   String
+  name       String
+  slug       String
+  format     DivisionFormat
+  maxTeams   Int?
+  archivedAt DateTime?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  season  Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  teams   Team[]
+  matches Match[]
+
+  @@unique([seasonId, slug])
+  @@index([seasonId, name])
 }
 
 model Team {
@@ -106,9 +131,11 @@ model Team {
   name           String
   seasonId       String
   organizationId String
+  divisionId     String
 
   season       Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  division     Division     @relation(fields: [divisionId], references: [id])
   players      Player[]
   matchesAsA   Match[]      @relation("TeamA")
   matchesAsB   Match[]      @relation("TeamB")
@@ -149,19 +176,22 @@ model Court {
 model Match {
   id          String      @id @default(uuid())
   seasonId    String
+  divisionId  String
   teamAId     String
   teamBId     String
   courtId     String
   scheduledAt DateTime
   status      MatchStatus @default(SCHEDULED)
 
-  season Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  teamA  Team         @relation("TeamA", fields: [teamAId, seasonId], references: [id, seasonId])
-  teamB  Team         @relation("TeamB", fields: [teamBId, seasonId], references: [id, seasonId])
-  court  Court        @relation(fields: [courtId], references: [id])
-  result MatchResult?
+  season   Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  division Division     @relation(fields: [divisionId], references: [id])
+  teamA    Team         @relation("TeamA", fields: [teamAId, seasonId], references: [id, seasonId])
+  teamB    Team         @relation("TeamB", fields: [teamBId, seasonId], references: [id, seasonId])
+  court    Court        @relation(fields: [courtId], references: [id])
+  result   MatchResult?
 
   @@index([seasonId])
+  @@index([divisionId])
   @@index([teamAId, seasonId])
   @@index([teamBId, seasonId])
   @@index([courtId])
