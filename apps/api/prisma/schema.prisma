@@ -184,7 +184,7 @@ model Match {
   status      MatchStatus @default(SCHEDULED)
 
   season   Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  division Division     @relation(fields: [divisionId], references: [id])
+  division Division     @relation(fields: [divisionId, seasonId], references: [id, seasonId])
   teamA    Team         @relation("TeamA", fields: [teamAId, seasonId], references: [id, seasonId])
   teamB    Team         @relation("TeamB", fields: [teamBId, seasonId], references: [id, seasonId])
   court    Court        @relation(fields: [courtId], references: [id])
