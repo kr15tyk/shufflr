@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsInt, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsInt,
+  IsDateString,
+  IsArray,
+  ArrayMinSize,
+} from 'class-validator';
 
 export class GenerateScheduleDto {
   @IsString()
@@ -7,6 +14,23 @@ export class GenerateScheduleDto {
   @IsString()
   @IsOptional()
   format?: string;
+}
+
+export class GenerateScheduleBodyDto {
+  @IsArray()
+  @ArrayMinSize(2)
+  @IsString({ each: true })
+  teamIds!: string[];
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
+  courtIds!: string[];
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsDateString({}, { each: true })
+  dates!: string[];
 }
 
 export class EnterScoreDto {
