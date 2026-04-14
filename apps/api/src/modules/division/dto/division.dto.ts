@@ -1,10 +1,5 @@
 import { IsString, IsOptional, IsInt, IsEnum, Min } from 'class-validator';
-
-export enum DivisionFormat {
-  TEAMS = 'TEAMS',
-  SINGLES = 'SINGLES',
-}
-
+import { DivisionFormat } from '@prisma/client';
 export class CreateDivisionDto {
   @IsString()
   name!: string;
