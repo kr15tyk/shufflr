@@ -1,1 +1,54 @@
-node_modules
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+build/
+coverage/
+.next/
+out/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Prisma generated client if committed noise appears locally
+src/generated/
+generated/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temp files
+.tmp/
+.tmp.*
+temp/
+tmp/
+
+# Test artifacts
+playwright-report/
+test-results/
+
+# Local package manager artifacts
+.pnpm-store/
+
+# Turbo / TypeScript cache
+.turbo/
+.cache/
+*.tsbuildinfo
+
+# Platform-specific local config
+.vercel/
+.codespaces/
