@@ -5,6 +5,9 @@ export class GenerateScheduleDto {
   seasonId!: string;
 
   @IsString()
+  divisionId!: string;
+
+  @IsString()
   @IsOptional()
   format?: string;
 }
@@ -18,6 +21,10 @@ export class EnterScoreDto {
 }
 
 export class UpdateMatchDto {
+  @IsString()
+  @IsOptional()
+  divisionId?: string;
+
   @IsString()
   @IsOptional()
   courtId?: string;
