@@ -13,27 +13,30 @@ export class GenerateScheduleDto {
     seasonId!: string;
 
   @IsString()
-    @IsOptional()
-    format?: string;
+  divisionId!: string;
+
+  @IsString()
+  @IsOptional()
+  format?: string;
 }
-
-export class GenerateScheduleBodyDto {
-    @IsArray()
-    @ArrayMinSize(2)
-    @ArrayUnique()
-    @IsString({ each: true })
-    teamIds!: string[];
-
-  @IsArray()
-    @ArrayMinSize(1)
-    @ArrayUnique()
-    @IsString({ each: true })
-    courtIds!: string[];
+  
+  export class GenerateScheduleBodyDto {
+      @IsArray()
+      @ArrayMinSize(2)
+      @ArrayUnique()
+      @IsString({ each: true })
+      teamIds!: string[];
 
   @IsArray()
-    @ArrayMinSize(1)
-    @IsDateString({}, { each: true })
-    dates!: string[];
+  @ArrayMinSize(1)
+  @ArrayUnique()
+  @IsString({ each: true })
+  courtIds!: string[];
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsDateString({}, { each: true })
+  dates!: string[];
 }
 
 export class EnterScoreDto {
@@ -41,15 +44,19 @@ export class EnterScoreDto {
     homeScore!: number;
 
   @IsInt()
-    awayScore!: number;
+  awayScore!: number;
 }
 
 export class UpdateMatchDto {
     @IsString()
     @IsOptional()
+    divisionId?: string;
+  
+    @IsString()
+    @IsOptional()
     courtId?: string;
-
-  @IsDateString()
+  
+    @IsDateString()
     @IsOptional()
     scheduledAt?: string;
 }
