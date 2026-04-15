@@ -11,7 +11,7 @@ import {
 import { DivisionService } from './division.service';
 import { CreateDivisionDto, UpdateDivisionDto } from './dto/division.dto';
 import { ScheduleService } from '../match/schedule.service';
-import { DivisionScheduleBodyDto, GenerateScheduleBodyDto } from '../match/dto/match.dto';
+import { DivisionScheduleBodyDto } from '../match/dto/match.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -71,9 +71,9 @@ export class DivisionByIdController {
   @Post(':id/generate-schedule')
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN, Role.LEAGUE_ADMIN)
   generateSchedule(@Param('id') divisionId: string, @Body() dto: DivisionScheduleBodyDto) {
-    // Build the GenerateScheduleBodyDto explicitly, taking divisionId from the URL param
+    // Build the schedule DTO explicitly, taking divisionId from the URL param
     // and all other fields from the request body.
-    const scheduleDto: GenerateScheduleBodyDto = {
+    const scheduleDto = {
       divisionId,
       teamIds: dto.teamIds,
       courtIds: dto.courtIds,

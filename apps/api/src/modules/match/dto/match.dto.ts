@@ -7,6 +7,7 @@ import {
   ArrayMinSize,
   ArrayUnique,
   Min,
+  Matches,
 } from 'class-validator';
 
 export class GenerateScheduleDto {
@@ -47,8 +48,16 @@ export class GenerateScheduleBodyDto {
   @IsOptional()
   maxMatchesPerDayPerTeam?: number;
 
+  /**
+   * Optional list of calendar days to skip when scheduling.
+   * Accepts YYYY-MM-DD plain dates as well as full ISO 8601 datetime strings,
+   * both starting with the YYYY-MM-DD prefix. Using @Matches rather than
+   * @IsDateString here because @IsDateString requires a time component in some
+   * validator configurations and would reject plain date-only strings.
+   */
   @IsArray()
-  @IsDateString({}, { each: true })
+  @IsString({ each: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}/, { each: true })
   @IsOptional()
   blockedDates?: string[];
 }
@@ -83,8 +92,16 @@ export class DivisionScheduleBodyDto {
   @IsOptional()
   maxMatchesPerDayPerTeam?: number;
 
+  /**
+   * Optional list of calendar days to skip when scheduling.
+   * Accepts YYYY-MM-DD plain dates as well as full ISO 8601 datetime strings,
+   * both starting with the YYYY-MM-DD prefix. Using @Matches rather than
+   * @IsDateString here because @IsDateString requires a time component in some
+   * validator configurations and would reject plain date-only strings.
+   */
   @IsArray()
-  @IsDateString({}, { each: true })
+  @IsString({ each: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}/, { each: true })
   @IsOptional()
   blockedDates?: string[];
 }
