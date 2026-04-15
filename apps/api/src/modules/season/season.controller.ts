@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { SeasonService } from './season.service';
 import { CreateSeasonDto, UpdateSeasonDto } from './dto/season.dto';
+import { ScheduleService } from '../match/schedule.service';
+import { GenerateScheduleBodyDto } from '../match/dto/match.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -18,7 +20,10 @@ import { Role } from '../../common/enums/role.enum';
 @Controller('seasons')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SeasonController {
-  constructor(private readonly seasonService: SeasonService) {}
+  constructor(
+    private readonly seasonService: SeasonService,
+    private readonly scheduleService: ScheduleService,
+  ) {}
 
   @Get()
   findAll() {
@@ -34,6 +39,15 @@ export class SeasonController {
   @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN, Role.LEAGUE_ADMIN)
   create(@Body() dto: CreateSeasonDto) {
     return this.seasonService.create(dto);
+  }
+
+  @Post(':id/generate-schedule')
+  @Roles(Role.SUPER_ADMIN, Role.ORG_ADMIN, Role.LEAGUE_ADMIN)
+  generateSchedule(
+    @Param('id') id: string,
+    @Body() dto: GenerateScheduleBodyDto,
+  ) {
+    return this.scheduleService.generateSchedule(id, dto);
   }
 
   @Put(':id')

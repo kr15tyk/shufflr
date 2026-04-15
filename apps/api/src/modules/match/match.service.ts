@@ -1,33 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import {
-  GenerateScheduleDto,
-  EnterScoreDto,
-  UpdateMatchDto,
-} from './dto/match.dto';
+import { EnterScoreDto, UpdateMatchDto } from './dto/match.dto';
 
 @Injectable()
-export class MatchService {
-  findAll() {
-    return [];
-  }
+  export class MatchService {
+    findAll() {
+          return [];
+    }
 
   findOne(id: string) {
-    return { id };
-  }
-
-  generateSchedule(_dto: GenerateScheduleDto) {
-    return { id: '' };
+        return { id };
   }
 
   enterScore(id: string, _dto: EnterScoreDto) {
-    return { id };
+        return { id };
   }
 
   update(id: string, _dto: UpdateMatchDto) {
-    return { id };
+        return { id };
   }
 
   remove(id: string) {
-    return { id };
+        return { id };
   }
 }
