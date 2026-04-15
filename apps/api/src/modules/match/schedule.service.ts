@@ -3,6 +3,7 @@ import { GenerateScheduleBodyDto } from './dto/match.dto';
 
 export interface ScheduledMatch {
     seasonId: string;
+    divisionId: string;
     teamAId: string;
     teamBId: string;
     courtId: string;
@@ -99,7 +100,7 @@ type AssignedMatch = { teamA: string; teamB: string; courtId: string };
         seasonId: string,
         dto: GenerateScheduleBodyDto,
       ): ScheduledMatch[] {
-        const { teamIds, courtIds, dates } = dto;
+        const { divisionId, teamIds, courtIds, dates } = dto;
         const rounds = this.generateRoundRobin(teamIds);
         const assignedRounds = this.assignCourts(rounds, courtIds);
         const matches: ScheduledMatch[] = [];
@@ -113,6 +114,7 @@ type AssignedMatch = { teamA: string; teamB: string; courtId: string };
                                    for (const { teamA, teamB, courtId } of round) {
                                              matches.push({
                                                          seasonId,
+                                                         divisionId,
                                                          teamAId: teamA,
                                                          teamBId: teamB,
                                                          courtId,
