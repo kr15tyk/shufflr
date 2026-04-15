@@ -150,21 +150,32 @@ describe('ScheduleService', () => {
           expect(courts).toContain(courtId);
         });
 
-        // Count same-court consecutive repeats across all matches (flattened across rounds)
-        let repeats = 0;
+        // Track same-court consecutive repeats per team across rounds.
+        const repeatCounts = new Map<string, number>();
         const lastCourt = new Map<string, string>();
-        assigned.flat().forEach(({ teamA, teamB, courtId }) => {
-          if (lastCourt.has(teamA) && lastCourt.get(teamA) === courtId) repeats++;
-          if (lastCourt.has(teamB) && lastCourt.get(teamB) === courtId) repeats++;
-          lastCourt.set(teamA, courtId);
-          lastCourt.set(teamB, courtId);
+
+        assigned.forEach((round) => {
+          round.forEach(({ teamA, teamB, courtId }) => {
+            if (lastCourt.get(teamA) === courtId) {
+              repeatCounts.set(teamA, (repeatCounts.get(teamA) ?? 0) + 1);
+            }
+            if (lastCourt.get(teamB) === courtId) {
+              repeatCounts.set(teamB, (repeatCounts.get(teamB) ?? 0) + 1);
+            }
+            lastCourt.set(teamA, courtId);
+            lastCourt.set(teamB, courtId);
+          });
         });
 
-        // A naive algorithm that ignores the constraint would repeat the same court
-        // for every team in every subsequent match. Best-effort should keep repeats
-        // well below that theoretical ceiling.
-        const totalTeamAppearances = assigned.flat().length * 2;
-        expect(repeats).toBeLessThan(totalTeamAppearances);
+        const totalRepeats = [...repeatCounts.values()].reduce((sum, count) => sum + count, 0);
+
+        // For this fixed input and mocked RNG, the best-effort assignment is deterministic:
+        // exactly two consecutive same-court repeats are unavoidable overall, and no team
+        // should be forced into more than one such repeat.
+        expect(totalRepeats).toBe(2);
+        ['t1', 't2', 't3', 't4'].forEach((team) => {
+          expect(repeatCounts.get(team) ?? 0).toBeLessThanOrEqual(1);
+        });
       } finally {
         randomSpy.mockRestore();
       }
