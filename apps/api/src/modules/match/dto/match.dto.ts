@@ -21,6 +21,9 @@ export class GenerateScheduleDto {
 }
   
   export class GenerateScheduleBodyDto {
+      @IsString()
+      divisionId!: string;
+
       @IsArray()
       @ArrayMinSize(2)
       @ArrayUnique()

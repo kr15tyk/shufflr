@@ -188,6 +188,7 @@ describe('ScheduleService', () => {
            // ─────────────────────────────────────────────────────────────────────────
            describe('generateSchedule', () => {
                  const seasonId = 'season-1';
+                 const divisionId = 'div-1';
                  const teamIds = ['t1', 't2', 't3', 't4'];
                  const courtIds = ['c1', 'c2'];
                  const dates = [
@@ -198,6 +199,7 @@ describe('ScheduleService', () => {
 
                         it('returns an array of match objects', () => {
                                 const matches = service.generateSchedule(seasonId, {
+                                          divisionId,
                                           teamIds,
                                           courtIds,
                                           dates,
@@ -208,6 +210,7 @@ describe('ScheduleService', () => {
 
                         it('sets the correct seasonId on every match', () => {
                                 const matches = service.generateSchedule(seasonId, {
+                                          divisionId,
                                           teamIds,
                                           courtIds,
                                           dates,
@@ -215,8 +218,19 @@ describe('ScheduleService', () => {
                                 matches.forEach((m) => expect(m.seasonId).toBe(seasonId));
                         });
 
+                        it('sets the correct divisionId on every match', () => {
+                                const matches = service.generateSchedule(seasonId, {
+                                          divisionId,
+                                          teamIds,
+                                          courtIds,
+                                          dates,
+                                });
+                                matches.forEach((m) => expect(m.divisionId).toBe(divisionId));
+                        });
+
                         it('sets status to SCHEDULED on every match', () => {
                                 const matches = service.generateSchedule(seasonId, {
+                                          divisionId,
                                           teamIds,
                                           courtIds,
                                           dates,
@@ -226,6 +240,7 @@ describe('ScheduleService', () => {
 
                         it('produces N*(N-1)/2 matches for an even number of teams', () => {
                                 const matches = service.generateSchedule(seasonId, {
+                                          divisionId,
                                           teamIds,
                                           courtIds,
                                           dates,
@@ -236,6 +251,7 @@ describe('ScheduleService', () => {
                         it('produces N*(N-1)/2 matches for an odd number of teams (BYEs excluded)', () => {
                                 const oddTeams = ['t1', 't2', 't3'];
                                 const matches = service.generateSchedule(seasonId, {
+                                          divisionId,
                                           teamIds: oddTeams,
                                           courtIds,
                                           dates,
@@ -247,6 +263,7 @@ describe('ScheduleService', () => {
 
                         it('assigns a valid court to every match', () => {
                                 const matches = service.generateSchedule(seasonId, {
+                                          divisionId,
                                           teamIds,
                                           courtIds,
                                           dates,
@@ -256,6 +273,7 @@ describe('ScheduleService', () => {
 
                         it('assigns scheduledAt from the provided dates list', () => {
                                 const matches = service.generateSchedule(seasonId, {
+                                          divisionId,
                                           teamIds,
                                           courtIds,
                                           dates,
@@ -269,6 +287,7 @@ describe('ScheduleService', () => {
                         it('reuses the last date when there are fewer dates than rounds', () => {
                                 const onlyOneDate = ['2025-01-07T10:00:00.000Z'];
                                 const matches = service.generateSchedule(seasonId, {
+                                          divisionId,
                                           teamIds,
                                           courtIds,
                                           dates: onlyOneDate,
@@ -281,6 +300,7 @@ describe('ScheduleService', () => {
 
                         it('each match gets its own independent scheduledAt Date instance', () => {
                                 const matches = service.generateSchedule(seasonId, {
+                                          divisionId,
                                           teamIds,
                                           courtIds,
                                           dates,
