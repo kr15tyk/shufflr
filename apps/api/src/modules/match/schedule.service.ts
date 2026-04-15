@@ -170,8 +170,12 @@ export class ScheduleService {
     return arr;
   }
 
-  /** Returns the YYYY-MM-DD portion of a date string or ISO timestamp. */
+  /** Returns the client-provided YYYY-MM-DD calendar day from a date string or ISO timestamp. */
   private toDateKey(d: string): string {
+    const directDateMatch = d.match(/^(\d{4}-\d{2}-\d{2})(?:$|T|\s)/);
+    if (directDateMatch) {
+      return directDateMatch[1];
+    }
     return new Date(d).toISOString().slice(0, 10);
   }
 }
