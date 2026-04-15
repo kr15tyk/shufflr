@@ -6,6 +6,7 @@ import {
   IsArray,
   ArrayMinSize,
   ArrayUnique,
+  Min,
 } from 'class-validator';
 
 export class GenerateScheduleDto {
@@ -40,6 +41,52 @@ export class GenerateScheduleBodyDto {
   @ArrayMinSize(1)
   @IsDateString({}, { each: true })
   dates!: string[];
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  maxMatchesPerDayPerTeam?: number;
+
+  @IsArray()
+  @IsDateString({}, { each: true })
+  @IsOptional()
+  blockedDates?: string[];
+}
+
+/**
+ * Body DTO for POST /divisions/:id/generate-schedule.
+ * The divisionId comes from the URL param, so seasonId is supplied in the body instead.
+ */
+export class DivisionScheduleBodyDto {
+  @IsString()
+  seasonId!: string;
+
+  @IsArray()
+  @ArrayMinSize(2)
+  @ArrayUnique()
+  @IsString({ each: true })
+  teamIds!: string[];
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayUnique()
+  @IsString({ each: true })
+  courtIds!: string[];
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsDateString({}, { each: true })
+  dates!: string[];
+
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  maxMatchesPerDayPerTeam?: number;
+
+  @IsArray()
+  @IsDateString({}, { each: true })
+  @IsOptional()
+  blockedDates?: string[];
 }
 
 export class EnterScoreDto {
