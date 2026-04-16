@@ -14,6 +14,7 @@ import { CourtModule } from './modules/court/court.module';
 import { MatchModule } from './modules/match/match.module';
 import { DivisionModule } from './modules/division/division.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { StandingsModule } from './modules/standings/standings.module';
 import { HealthModule } from './health/health.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 import { PrismaModule } from './common/prisma/prisma.module';
@@ -36,6 +37,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
     MatchModule,
     DivisionModule,
     NotificationModule,
+    StandingsModule,
     HealthModule,
   ],
   controllers: [AppController],
