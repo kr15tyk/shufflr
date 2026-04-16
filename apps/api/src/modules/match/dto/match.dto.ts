@@ -114,6 +114,30 @@ export class EnterScoreDto {
   awayScore!: number;
 }
 
+export class SubmitScoreDto {
+  @IsInt()
+  scoreA!: number;
+
+  @IsInt()
+  scoreB!: number;
+}
+
+export class ApproveScoreDto {
+  @IsInt()
+  @IsOptional()
+  scoreA?: number;
+
+  @IsInt()
+  @IsOptional()
+  scoreB?: number;
+}
+
+export class RejectScoreDto {
+  @IsString()
+  @IsOptional()
+  rejectionReason?: string;
+}
+
 export class UpdateMatchDto {
   @IsString()
   @IsOptional()
