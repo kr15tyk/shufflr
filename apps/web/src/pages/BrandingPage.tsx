@@ -267,6 +267,7 @@ export function BrandingPage(): React.JSX.Element {
     }
 
     // Validate URL fields before sending them to the API.
+    // Only allow http/https to prevent javascript: or data: URI injection.
     const urlErrors: string[] = [];
     for (const [field, label] of [
       ['logoUrl', 'Logo URL'],
@@ -275,7 +276,10 @@ export function BrandingPage(): React.JSX.Element {
       const raw = form[field];
       if (raw) {
         try {
-          new URL(raw);
+          const parsed = new URL(raw);
+          if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            urlErrors.push(`${label} must use http or https.`);
+          }
         } catch {
           urlErrors.push(`${label} is not a valid URL.`);
         }
