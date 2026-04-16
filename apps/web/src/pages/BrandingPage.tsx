@@ -28,9 +28,9 @@ function toFormState(theme: ThemeSettings): FormState {
 }
 
 /**
- * Normalises a hex colour to 6-digit form.
+ * Normalizes a hex color to 6-digit form.
  * Accepts `#RGB` → `#RRGGBB` or passes `#RRGGBB` through unchanged.
- * Returns null for anything that isn't a recognisable hex colour.
+ * Returns null for anything that isn't a recognizable hex color.
  */
 function normalizeHexColor(value: string): string | null {
   const short = /^#([0-9a-fA-F]{3})$/.exec(value);
@@ -135,8 +135,8 @@ interface ColorFieldProps {
  * Color input that pairs a native color picker with a free-text hex input.
  *
  * The text input allows typing intermediate / 3-digit values without
- * disrupting the color picker.  Changes are committed to the parent (and the
- * picker updated) only when the text is a valid hex colour.
+ * disrupting the color picker. Changes are committed to the parent (and the
+ * picker updated) only when the text is a valid hex color.
  */
 function ColorField({ label, fieldId, value, onChange }: ColorFieldProps): React.JSX.Element {
   // `rawText` tracks what the user has typed so the text input doesn't jump
@@ -345,27 +345,27 @@ export function BrandingPage(): React.JSX.Element {
         {/* ── Form ── */}
         <form onSubmit={handleSave} noValidate>
           <fieldset style={{ border: 'none', padding: 0, margin: '0 0 1.5rem' }}>
-            <legend style={{ fontWeight: 700, marginBottom: '0.75rem' }}>Colours</legend>
+            <legend style={{ fontWeight: 700, marginBottom: '0.75rem' }}>Colors</legend>
             <ColorField
-              label="Primary colour"
+              label="Primary color"
               fieldId="primaryColor"
               value={form.primaryColor}
               onChange={(v) => handleChange('primaryColor', v)}
             />
             <ColorField
-              label="Secondary colour"
+              label="Secondary color"
               fieldId="secondaryColor"
               value={form.secondaryColor}
               onChange={(v) => handleChange('secondaryColor', v)}
             />
             <ColorField
-              label="Surface colour"
+              label="Surface color"
               fieldId="surfaceColor"
               value={form.surfaceColor}
               onChange={(v) => handleChange('surfaceColor', v)}
             />
             <ColorField
-              label="Text colour"
+              label="Text color"
               fieldId="textColor"
               value={form.textColor}
               onChange={(v) => handleChange('textColor', v)}
