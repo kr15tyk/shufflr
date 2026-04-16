@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ResultSource, ResultStatus } from '../../../generated/prisma/client';
+import { Role } from '../../common/enums/role.enum';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import {
@@ -20,7 +21,7 @@ import {
 export interface AuthenticatedUser {
   userId: string;
   email: string;
-  roles: string[];
+  roles: Role[];
 }
 
 @Injectable()
@@ -66,9 +67,9 @@ export class MatchService {
     }
 
     const isAdmin =
-      user.roles.includes('ORG_ADMIN') ||
-      user.roles.includes('LEAGUE_ADMIN') ||
-      user.roles.includes('SUPER_ADMIN');
+      user.roles.includes(Role.ORG_ADMIN) ||
+      user.roles.includes(Role.LEAGUE_ADMIN) ||
+      user.roles.includes(Role.SUPER_ADMIN);
 
     const allPlayers = [...match.teamA.players, ...match.teamB.players];
     const isParticipant = allPlayers.some((p) => p.userId === user.userId);

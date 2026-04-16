@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ResultSource, ResultStatus } from '../../../generated/prisma/client';
+import { Role } from '../../common/enums/role.enum';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { NotificationService } from '../notification/notification.service';
 import { AuthenticatedUser, MatchService } from './match.service';
@@ -16,19 +17,19 @@ import { AuthenticatedUser, MatchService } from './match.service';
 const adminUser: AuthenticatedUser = {
   userId: 'admin-1',
   email: 'admin@example.com',
-  roles: ['ORG_ADMIN'],
+  roles: [Role.ORG_ADMIN],
 };
 
 const playerUser: AuthenticatedUser = {
   userId: 'player-1',
   email: 'player@example.com',
-  roles: ['PLAYER'],
+  roles: [Role.PLAYER],
 };
 
 const outsiderUser: AuthenticatedUser = {
   userId: 'outsider-99',
   email: 'outsider@example.com',
-  roles: ['PLAYER'],
+  roles: [Role.PLAYER],
 };
 
 function buildMatch(overrides: Partial<{
