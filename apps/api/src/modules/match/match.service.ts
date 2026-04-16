@@ -135,7 +135,7 @@ export class MatchService {
       throw new ConflictException('Score has already been approved');
     }
 
-    const isOverriding = dto.scoreA !== undefined || dto.scoreB !== undefined;
+    const isOverriding = dto.scoreA != null || dto.scoreB != null;
     const scoreA = dto.scoreA ?? match.result.scoreA;
     const scoreB = dto.scoreB ?? match.result.scoreB;
 
