@@ -80,7 +80,8 @@ describe('MatchService', () => {
   let service: MatchService;
   let prismaMock: {
     match: { findUnique: jest.Mock };
-    matchResult: { upsert: jest.Mock; update: jest.Mock };
+    matchResult: { findUnique: jest.Mock; upsert: jest.Mock; update: jest.Mock };
+    $transaction: jest.Mock;
   };
   let eventEmitterMock: { emit: jest.Mock };
   let notificationMock: { sendNotification: jest.Mock };
@@ -88,7 +89,11 @@ describe('MatchService', () => {
   beforeEach(async () => {
     prismaMock = {
       match: { findUnique: jest.fn() },
-      matchResult: { upsert: jest.fn(), update: jest.fn() },
+      matchResult: { findUnique: jest.fn(), upsert: jest.fn(), update: jest.fn() },
+      // Run the transaction callback with prismaMock itself as the tx client
+      $transaction: jest.fn().mockImplementation(async (callback: (tx: unknown) => unknown) =>
+        callback(prismaMock),
+      ),
     };
     eventEmitterMock = { emit: jest.fn() };
     notificationMock = { sendNotification: jest.fn() };
@@ -131,6 +136,7 @@ describe('MatchService', () => {
     it('allows a participant player to submit a score', async () => {
       const pending = buildResult();
       prismaMock.match.findUnique.mockResolvedValue(buildMatch({ result: null }));
+      prismaMock.matchResult.findUnique.mockResolvedValue(null);
       prismaMock.matchResult.upsert.mockResolvedValue(pending);
 
       const result = await service.submitScore('match-1', { scoreA: 3, scoreB: 1 }, playerUser);
@@ -141,7 +147,9 @@ describe('MatchService', () => {
 
     it('throws ConflictException on duplicate PENDING submission', async () => {
       const existing = buildResult({ status: ResultStatus.PENDING });
-      prismaMock.match.findUnique.mockResolvedValue(buildMatch({ result: existing }));
+      prismaMock.match.findUnique.mockResolvedValue(buildMatch({ result: null }));
+      // Inside the transaction, findUnique reveals an existing PENDING result
+      prismaMock.matchResult.findUnique.mockResolvedValue(existing);
 
       await expect(
         service.submitScore('match-1', { scoreA: 3, scoreB: 1 }, playerUser),
@@ -160,17 +168,20 @@ describe('MatchService', () => {
     it('allows admin to submit even when a score is APPROVED (override path)', async () => {
       const approved = buildResult({ status: ResultStatus.APPROVED });
       prismaMock.match.findUnique.mockResolvedValue(
-        buildMatch({ result: approved, teamAPlayers: [], teamBPlayers: [] }),
+        buildMatch({ result: approved, teamAPlayers: [{ userId: adminUser.userId }] }),
       );
-      const pending = buildResult({ status: ResultStatus.PENDING, source: ResultSource.PLAYER });
+      prismaMock.matchResult.findUnique.mockResolvedValue(null);
+      const pending = buildResult({ status: ResultStatus.PENDING, source: ResultSource.ADMIN });
       prismaMock.matchResult.upsert.mockResolvedValue(pending);
 
       const result = await service.submitScore('match-1', { scoreA: 5, scoreB: 0 }, adminUser);
       expect(result.status).toBe(ResultStatus.PENDING);
+      expect(result.source).toBe(ResultSource.ADMIN);
     });
 
     it('sends a notification after successful submission', async () => {
       prismaMock.match.findUnique.mockResolvedValue(buildMatch({ result: null }));
+      prismaMock.matchResult.findUnique.mockResolvedValue(null);
       prismaMock.matchResult.upsert.mockResolvedValue(buildResult());
 
       await service.submitScore('match-1', { scoreA: 3, scoreB: 1 }, playerUser);
@@ -183,10 +194,23 @@ describe('MatchService', () => {
     it('sets source to PLAYER when submitted by a player', async () => {
       const pending = buildResult({ source: ResultSource.PLAYER });
       prismaMock.match.findUnique.mockResolvedValue(buildMatch({ result: null }));
+      prismaMock.matchResult.findUnique.mockResolvedValue(null);
       prismaMock.matchResult.upsert.mockResolvedValue(pending);
 
       const result = await service.submitScore('match-1', { scoreA: 3, scoreB: 1 }, playerUser);
       expect(result.source).toBe(ResultSource.PLAYER);
+    });
+
+    it('sets source to ADMIN when submitted by an admin', async () => {
+      const pending = buildResult({ source: ResultSource.ADMIN });
+      prismaMock.match.findUnique.mockResolvedValue(
+        buildMatch({ result: null, teamAPlayers: [{ userId: adminUser.userId }] }),
+      );
+      prismaMock.matchResult.findUnique.mockResolvedValue(null);
+      prismaMock.matchResult.upsert.mockResolvedValue(pending);
+
+      const result = await service.submitScore('match-1', { scoreA: 3, scoreB: 1 }, adminUser);
+      expect(result.source).toBe(ResultSource.ADMIN);
     });
   });
 

@@ -81,29 +81,34 @@ export class MatchService {
       throw new ConflictException('Score has already been approved; only an admin can override');
     }
 
-    // Prevent duplicate PENDING submissions for the same match
-    if (match.result?.status === ResultStatus.PENDING) {
-      throw new ConflictException('A pending score submission already exists for this match');
-    }
+    const source = isAdmin ? ResultSource.ADMIN : ResultSource.PLAYER;
 
-    const result = await this.prisma.matchResult.upsert({
-      where: { matchId },
-      create: {
-        matchId,
-        scoreA: dto.scoreA,
-        scoreB: dto.scoreB,
-        status: ResultStatus.PENDING,
-        source: ResultSource.PLAYER,
-        submittedById: user.userId,
-      },
-      update: {
-        scoreA: dto.scoreA,
-        scoreB: dto.scoreB,
-        status: ResultStatus.PENDING,
-        source: ResultSource.PLAYER,
-        submittedById: user.userId,
-        rejectionReason: null,
-      },
+    // Prevent duplicate PENDING submissions atomically
+    const result = await this.prisma.$transaction(async (tx) => {
+      const current = await tx.matchResult.findUnique({ where: { matchId } });
+      if (current?.status === ResultStatus.PENDING) {
+        throw new ConflictException('A pending score submission already exists for this match');
+      }
+
+      return tx.matchResult.upsert({
+        where: { matchId },
+        create: {
+          matchId,
+          scoreA: dto.scoreA,
+          scoreB: dto.scoreB,
+          status: ResultStatus.PENDING,
+          source,
+          submittedById: user.userId,
+        },
+        update: {
+          scoreA: dto.scoreA,
+          scoreB: dto.scoreB,
+          status: ResultStatus.PENDING,
+          source,
+          submittedById: user.userId,
+          rejectionReason: null,
+        },
+      });
     });
 
     // Notify for review (best-effort; NotificationService is a stub)
@@ -162,7 +167,7 @@ export class MatchService {
     return result;
   }
 
-  async rejectScore(matchId: string, dto: RejectScoreDto, user: AuthenticatedUser) {
+  async rejectScore(matchId: string, dto: RejectScoreDto, _user: AuthenticatedUser) {
     const match = await this.prisma.match.findUnique({
       where: { id: matchId },
       include: { result: true },
