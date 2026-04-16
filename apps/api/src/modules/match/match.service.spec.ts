@@ -69,6 +69,7 @@ function buildResult(overrides: Record<string, unknown> = {}) {
     rejectionReason: null,
     submittedById: 'player-1',
     approvedById: null,
+    rejectedById: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -349,12 +350,17 @@ describe('MatchService', () => {
     it('transitions status from PENDING to REJECTED', async () => {
       const pending = buildResult({ status: ResultStatus.PENDING });
       prismaMock.match.findUnique.mockResolvedValue(buildMatch({ result: pending }));
-      const rejected = buildResult({ status: ResultStatus.REJECTED, approvedById: adminUser.userId });
+      const rejected = buildResult({ status: ResultStatus.REJECTED, rejectedById: adminUser.userId });
       prismaMock.matchResult.update.mockResolvedValue(rejected);
 
       const result = await service.rejectScore('match-1', {}, adminUser);
 
       expect(result.status).toBe(ResultStatus.REJECTED);
+      expect(prismaMock.matchResult.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ rejectedById: adminUser.userId, approvedById: null }),
+        }),
+      );
     });
 
     it('saves rejectionReason when provided', async () => {
@@ -362,7 +368,7 @@ describe('MatchService', () => {
       prismaMock.match.findUnique.mockResolvedValue(buildMatch({ result: pending }));
       const rejected = buildResult({
         status: ResultStatus.REJECTED,
-        approvedById: adminUser.userId,
+        rejectedById: adminUser.userId,
         rejectionReason: 'Scores do not match official records',
       });
       prismaMock.matchResult.update.mockResolvedValue(rejected);
@@ -381,7 +387,7 @@ describe('MatchService', () => {
       prismaMock.match.findUnique.mockResolvedValue(buildMatch({ result: pending }));
       const rejected = buildResult({
         status: ResultStatus.REJECTED,
-        approvedById: adminUser.userId,
+        rejectedById: adminUser.userId,
         rejectionReason: null,
       });
       prismaMock.matchResult.update.mockResolvedValue(rejected);

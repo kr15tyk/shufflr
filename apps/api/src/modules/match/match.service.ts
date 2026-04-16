@@ -168,7 +168,7 @@ export class MatchService {
     return result;
   }
 
-  async rejectScore(matchId: string, dto: RejectScoreDto, _user: AuthenticatedUser) {
+  async rejectScore(matchId: string, dto: RejectScoreDto, user: AuthenticatedUser) {
     const match = await this.prisma.match.findUnique({
       where: { id: matchId },
       include: { result: true },
@@ -191,6 +191,7 @@ export class MatchService {
       data: {
         status: ResultStatus.REJECTED,
         approvedById: null,
+        rejectedById: user.userId,
         rejectionReason: dto.rejectionReason ?? null,
       },
     });

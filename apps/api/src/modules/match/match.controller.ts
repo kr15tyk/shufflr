@@ -45,6 +45,7 @@ export class MatchController {
   }
 
   @Post(':id/submit-score')
+  @Roles(Role.PLAYER, Role.ORG_ADMIN, Role.LEAGUE_ADMIN, Role.SUPER_ADMIN)
   submitScore(
     @Param('id') id: string,
     @Body() dto: SubmitScoreDto,
