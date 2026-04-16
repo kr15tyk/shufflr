@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -15,12 +16,15 @@ import { DivisionModule } from './modules/division/division.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { HealthModule } from './health/health.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
+import { PrismaModule } from './common/prisma/prisma.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    EventEmitterModule.forRoot(),
+    PrismaModule,
     AuthModule,
     OrganizationModule,
     UserModule,

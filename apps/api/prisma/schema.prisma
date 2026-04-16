@@ -38,6 +38,17 @@ enum DivisionFormat {
   SINGLES
 }
 
+enum ResultStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ResultSource {
+  PLAYER
+  ADMIN
+}
+
 // ──────────────────────────────────────────────
 // Models
 // ──────────────────────────────────────────────
@@ -199,13 +210,18 @@ model Match {
 }
 
 model MatchResult {
-  id            String   @id @default(uuid())
-  matchId       String   @unique
-  scoreA        Int
-  scoreB        Int
-  submittedById String
-  approvedById  String?
-  createdAt     DateTime @default(now())
+  id              String        @id @default(uuid())
+  matchId         String        @unique
+  scoreA          Int
+  scoreB          Int
+  status          ResultStatus  @default(PENDING)
+  source          ResultSource  @default(PLAYER)
+  rejectionReason String?
+  submittedById   String
+  approvedById    String?
+  rejectedById    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   match       Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
   submittedBy User  @relation("SubmittedResults", fields: [submittedById], references: [id])
