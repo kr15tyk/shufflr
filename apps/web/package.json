@@ -20,8 +20,8 @@
   },
   "devDependencies": {
     "@shufflr/config": "*",
-    "@testing-library/react": "^16.0.0",
     "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.0",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^8.11.0",
