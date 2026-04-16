@@ -122,8 +122,9 @@ export function useTenantTheme(): TenantThemeState {
     const slug = resolveSlugFromLocation(window.location);
 
     if (!slug) {
-      // No slug found – apply defaults and skip API call.
+      // No slug found – apply defaults (including favicon) and skip API call.
       applyThemeToCss(DEFAULT_THEME);
+      applyFavicon(null);
       setState({ loading: false, error: null, org: null, slug: null });
       return;
     }
@@ -144,8 +145,9 @@ export function useTenantTheme(): TenantThemeState {
         setState({ loading: false, error: null, org, slug });
       })
       .catch((err: unknown) => {
-        // Fall back to defaults so the UI still renders.
+        // Fall back to defaults (including favicon) so the UI still renders.
         applyThemeToCss(DEFAULT_THEME);
+        applyFavicon(null);
         setState({
           loading: false,
           error: err instanceof Error ? err.message : String(err),

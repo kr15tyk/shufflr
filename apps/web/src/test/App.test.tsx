@@ -1,32 +1,23 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import App from '../App';
 
-// Provide a minimal fetch mock so useTenantTheme doesn't throw in jsdom.
+// Provide a fetch mock so useTenantTheme doesn't throw in jsdom.
 beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn(() =>
-      Promise.resolve({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found',
-        headers: new Headers(),
-        redirected: false,
-        type: 'default' as ResponseType,
-        url: '',
-        text: () => Promise.resolve('Not Found'),
-        json: () => Promise.reject(new Error('not ok')),
-        clone: () => ({}),
-        body: null,
-        bodyUsed: false,
-        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
-        blob: () => Promise.resolve(new Blob()),
-        formData: () => Promise.resolve(new FormData()),
-      } as unknown as Response),
+      Promise.resolve(
+        new Response('Not Found', { status: 404, statusText: 'Not Found' }),
+      ),
     ),
   );
+});
+
+// Restore all stubbed globals after each test to prevent leaking into other files.
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe('App', () => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTenant } from '../context/TenantContext';
 import { ThemeSettings, DEFAULT_THEME } from '../types/theme';
 import { applyThemeToCss } from '../hooks/useTenantTheme';
@@ -27,7 +27,24 @@ function toFormState(theme: ThemeSettings): FormState {
   };
 }
 
-/** Live preview card rendered with inline styles from the current form values. */
+/**
+ * Normalises a hex colour to 6-digit form.
+ * Accepts `#RGB` → `#RRGGBB` or passes `#RRGGBB` through unchanged.
+ * Returns null for anything that isn't a recognisable hex colour.
+ */
+function normalizeHexColor(value: string): string | null {
+  const short = /^#([0-9a-fA-F]{3})$/.exec(value);
+  if (short) {
+    const [r, g, b] = short[1].split('');
+    return `#${r}${r}${g}${g}${b}${b}`;
+  }
+  if (/^#[0-9a-fA-F]{6}$/.test(value)) {
+    return value;
+  }
+  return null;
+}
+
+
 function PreviewCard({ form }: { form: FormState }): React.JSX.Element {
   return (
     <div
@@ -106,10 +123,94 @@ function PreviewCard({ form }: { form: FormState }): React.JSX.Element {
   );
 }
 
+interface ColorFieldProps {
+  label: string;
+  fieldId: string;
+  /** Must always be a valid 6-digit hex colour (e.g. `#4F46E5`). */
+  value: string;
+  onChange: (value: string) => void;
+}
+
+/**
+ * Color input that pairs a native color picker with a free-text hex input.
+ *
+ * The text input allows typing intermediate / 3-digit values without
+ * disrupting the color picker.  Changes are committed to the parent (and the
+ * picker updated) only when the text is a valid hex colour.
+ */
+function ColorField({ label, fieldId, value, onChange }: ColorFieldProps): React.JSX.Element {
+  // `rawText` tracks what the user has typed so the text input doesn't jump
+  // while they're mid-way through entering a value.
+  const [rawText, setRawText] = useState(value);
+
+  // Sync raw text when the parent resets the value (e.g. org loads async).
+  useEffect(() => {
+    setRawText(value);
+  }, [value]);
+
+  function handleTextChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    const text = e.target.value;
+    setRawText(text);
+    const normalized = normalizeHexColor(text);
+    if (normalized) {
+      onChange(normalized);
+    }
+  }
+
+  function handleColorPickerChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    // The browser always emits a valid 6-digit hex from type="color".
+    setRawText(e.target.value);
+    onChange(e.target.value);
+  }
+
+  const pickerValue = normalizeHexColor(rawText) ?? value;
+
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <label
+        style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 600, fontSize: '0.85rem' }}
+        htmlFor={fieldId}
+      >
+        {label}
+      </label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <input
+          id={fieldId}
+          type="color"
+          value={pickerValue}
+          onChange={handleColorPickerChange}
+          style={{
+            width: 40,
+            height: 36,
+            padding: 2,
+            border: '1px solid #d1d5db',
+            borderRadius: 6,
+            cursor: 'pointer',
+          }}
+        />
+        <input
+          type="text"
+          value={rawText}
+          onChange={handleTextChange}
+          placeholder="#000000"
+          style={{
+            width: 130,
+            padding: '0.4rem 0.6rem',
+            border: '1px solid #d1d5db',
+            borderRadius: 6,
+            fontFamily: 'inherit',
+            fontSize: '0.9rem',
+            boxSizing: 'border-box',
+          }}
+          aria-label={`${label} hex value`}
+        />
+      </div>
+    </div>
+  );
+}
+
 /**
  * Org-admin branding page.
- *
- * Lets an org admin configure logo, favicon, colours, and fonts.
  * A live preview card reflects changes as the admin types.
  * On save, PATCHes `/api/v1/organizations/:id/theme` and re-applies the CSS
  * variables globally so the current page updates immediately.
@@ -121,7 +222,20 @@ export function BrandingPage(): React.JSX.Element {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  // Track whether the user has made any manual edits so we don't overwrite
+  // in-progress work when the org resolves asynchronously.
+  const hasUserEdited = useRef(false);
+
+  // When the tenant resolves after the initial render (async fetch), populate
+  // the form with the stored theme – unless the user has already started editing.
+  useEffect(() => {
+    if (org && !hasUserEdited.current) {
+      setForm(toFormState(org.theme));
+    }
+  }, [org]);
+
   function handleChange(field: keyof FormState, value: string): void {
+    hasUserEdited.current = true;
     setForm((prev) => {
       const updated = { ...prev, [field]: value };
       // Apply live preview to the actual page CSS vars.
@@ -144,6 +258,14 @@ export function BrandingPage(): React.JSX.Element {
     e.preventDefault();
     if (!org) return;
 
+    // Tenant slug is required so the backend can validate the subdomain guard.
+    // Fail with a user-visible message rather than sending an empty header that
+    // would silently be rejected with 403.
+    if (!slug) {
+      setSaveError('Cannot save: tenant context is not available. Please reload the page.');
+      return;
+    }
+
     setSaving(true);
     setSaveError(null);
     setSaveSuccess(false);
@@ -165,9 +287,8 @@ export function BrandingPage(): React.JSX.Element {
         headers: {
           'Content-Type': 'application/json',
           // The TenantMiddleware reads x-org-subdomain to set req.orgId.
-          // Pass the subdomain slug (not the UUID) so the guard can validate
-          // that the request targets the correct org.
-          'x-org-subdomain': slug ?? '',
+          // Pass the subdomain slug so the guard can validate the request.
+          'x-org-subdomain': slug,
         },
         body: JSON.stringify(body),
       });
@@ -203,39 +324,6 @@ export function BrandingPage(): React.JSX.Element {
     boxSizing: 'border-box',
   };
 
-  function ColorField({
-    label,
-    field,
-  }: {
-    label: string;
-    field: keyof FormState;
-  }): React.JSX.Element {
-    return (
-      <div style={{ marginBottom: '1rem' }}>
-        <label style={labelStyle} htmlFor={field}>
-          {label}
-        </label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <input
-            id={field}
-            type="color"
-            value={form[field]}
-            onChange={(e) => handleChange(field, e.target.value)}
-            style={{ width: 40, height: 36, padding: 2, border: '1px solid #d1d5db', borderRadius: 6, cursor: 'pointer' }}
-          />
-          <input
-            type="text"
-            value={form[field]}
-            onChange={(e) => handleChange(field, e.target.value)}
-            placeholder="#000000"
-            style={{ ...inputStyle, width: 130 }}
-            aria-label={`${label} hex value`}
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1rem' }}>
       <h1
@@ -258,10 +346,30 @@ export function BrandingPage(): React.JSX.Element {
         <form onSubmit={handleSave} noValidate>
           <fieldset style={{ border: 'none', padding: 0, margin: '0 0 1.5rem' }}>
             <legend style={{ fontWeight: 700, marginBottom: '0.75rem' }}>Colours</legend>
-            <ColorField label="Primary colour" field="primaryColor" />
-            <ColorField label="Secondary colour" field="secondaryColor" />
-            <ColorField label="Surface colour" field="surfaceColor" />
-            <ColorField label="Text colour" field="textColor" />
+            <ColorField
+              label="Primary colour"
+              fieldId="primaryColor"
+              value={form.primaryColor}
+              onChange={(v) => handleChange('primaryColor', v)}
+            />
+            <ColorField
+              label="Secondary colour"
+              fieldId="secondaryColor"
+              value={form.secondaryColor}
+              onChange={(v) => handleChange('secondaryColor', v)}
+            />
+            <ColorField
+              label="Surface colour"
+              fieldId="surfaceColor"
+              value={form.surfaceColor}
+              onChange={(v) => handleChange('surfaceColor', v)}
+            />
+            <ColorField
+              label="Text colour"
+              fieldId="textColor"
+              value={form.textColor}
+              onChange={(v) => handleChange('textColor', v)}
+            />
           </fieldset>
 
           <fieldset style={{ border: 'none', padding: 0, margin: '0 0 1.5rem' }}>
