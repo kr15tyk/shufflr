@@ -93,6 +93,11 @@ export function useTenantTheme(): TenantThemeState {
     slug: null,
   });
 
+  // The empty dependency array is intentional: tenant resolution happens once
+  // on page load. The org slug is derived from the initial URL; SPA navigation
+  // within the same org does not change the tenant, so re-running on every
+  // render would be redundant.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const slug = resolveSlugFromLocation(window.location);
 

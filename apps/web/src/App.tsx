@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { shuffle } from '@shufflr/utils';
 
@@ -20,7 +20,7 @@ function usePage(): string {
 
   // Listen for programmatic navigation (pushState / replaceState not used here,
   // but we handle the popstate event for browser back/forward support).
-  React.useEffect(() => {
+  useEffect(() => {
     const onPop = () => setPage(window.location.pathname);
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);

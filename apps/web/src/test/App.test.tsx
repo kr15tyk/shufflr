@@ -5,7 +5,28 @@ import App from '../App';
 
 // Provide a minimal fetch mock so useTenantTheme doesn't throw in jsdom.
 beforeEach(() => {
-  vi.stubGlobal('fetch', () => Promise.resolve({ ok: false, status: 404, statusText: 'Not Found', text: () => Promise.resolve('Not Found') }));
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() =>
+      Promise.resolve({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        headers: new Headers(),
+        redirected: false,
+        type: 'default' as ResponseType,
+        url: '',
+        text: () => Promise.resolve('Not Found'),
+        json: () => Promise.reject(new Error('not ok')),
+        clone: () => ({}),
+        body: null,
+        bodyUsed: false,
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+        blob: () => Promise.resolve(new Blob()),
+        formData: () => Promise.resolve(new FormData()),
+      } as unknown as Response),
+    ),
+  );
 });
 
 describe('App', () => {

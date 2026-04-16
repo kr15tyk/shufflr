@@ -115,7 +115,7 @@ function PreviewCard({ form }: { form: FormState }): React.JSX.Element {
  * variables globally so the current page updates immediately.
  */
 export function BrandingPage(): React.JSX.Element {
-  const { org } = useTenant();
+  const { org, slug } = useTenant();
   const [form, setForm] = useState<FormState>(toFormState(org?.theme ?? DEFAULT_THEME));
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -164,7 +164,10 @@ export function BrandingPage(): React.JSX.Element {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-org-subdomain': org.organizationId,
+          // The TenantMiddleware reads x-org-subdomain to set req.orgId.
+          // Pass the subdomain slug (not the UUID) so the guard can validate
+          // that the request targets the correct org.
+          'x-org-subdomain': slug ?? '',
         },
         body: JSON.stringify(body),
       });

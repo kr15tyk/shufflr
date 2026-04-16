@@ -35,7 +35,7 @@ export class OrganizationService {
     return {
       organizationId: org.id,
       name: org.name,
-      theme: org.themeSettings ?? { ...DEFAULT_THEME },
+      theme: org.themeSettings ?? DEFAULT_THEME,
     };
   }
 
