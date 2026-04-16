@@ -1,6 +1,11 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { StandingsService } from './standings.service';
 
+/**
+ * Standings are intentionally public — no JwtAuthGuard.
+ * Leagues publish standings for players, fans, and scoreboard displays to read
+ * without requiring an account.
+ */
 @Controller('seasons')
 export class StandingsController {
   constructor(private readonly standingsService: StandingsService) {}

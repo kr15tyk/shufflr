@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ResultStatus } from '../../../generated/prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
@@ -57,9 +58,24 @@ interface CacheEntry {
 @Injectable()
 export class StandingsService {
   private readonly cache = new Map<string, CacheEntry>();
-  private readonly CACHE_TTL_MS = 60_000;
+  /**
+   * Cache TTL in ms, configurable via STANDINGS_CACHE_TTL_MS env var.
+   * Defaults to 60 s.
+   *
+   * NOTE: This cache is in-process only. In a horizontally scaled deployment
+   * each instance holds its own Map, so an approval event handled by instance A
+   * will not invalidate instance B's cache. Entries self-heal after the TTL
+   * elapses. Consider a shared cache (e.g. Redis) if sub-TTL consistency across
+   * instances is required.
+   */
+  private readonly CACHE_TTL_MS: number;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    configService: ConfigService,
+  ) {
+    this.CACHE_TTL_MS = configService.get<number>('STANDINGS_CACHE_TTL_MS') ?? 60_000;
+  }
 
   @OnEvent('match.result.approved')
   handleMatchApproved(payload: MatchApprovedPayload): void {
@@ -151,7 +167,8 @@ export class StandingsService {
     for (const stats of statsMap.values()) {
       stats.pointDifferential = stats.pointsScored - stats.pointsAllowed;
       const totalGames = stats.wins + stats.losses + stats.ties;
-      stats.winPercentage = totalGames > 0 ? stats.wins / totalGames : 0;
+      // Uses the sports-standard formula: a tie counts as half a win.
+      stats.winPercentage = totalGames > 0 ? (stats.wins + 0.5 * stats.ties) / totalGames : 0;
     }
 
     const ranked = rankTeams([...statsMap.values()]);

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { rankTeams, StandingsService, TeamStats } from './standings.service';
 
@@ -171,7 +172,11 @@ describe('StandingsService', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [StandingsService, { provide: PrismaService, useValue: prismaMock }],
+      providers: [
+        StandingsService,
+        { provide: PrismaService, useValue: prismaMock },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
+      ],
     }).compile();
 
     service = module.get<StandingsService>(StandingsService);
@@ -242,7 +247,8 @@ describe('StandingsService', () => {
     expect(teamA.ties).toBe(1);
     expect(teamA.wins).toBe(0);
     expect(teamA.losses).toBe(0);
-    expect(teamA.winPercentage).toBe(0);
+    // A tie counts as half a win: (0 + 0.5 * 1) / 1 = 0.5
+    expect(teamA.winPercentage).toBe(0.5);
   });
 
   it('ranks the team with most wins first', async () => {
