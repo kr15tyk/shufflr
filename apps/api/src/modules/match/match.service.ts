@@ -70,12 +70,10 @@ export class MatchService {
       user.roles.includes('LEAGUE_ADMIN') ||
       user.roles.includes('SUPER_ADMIN');
 
-    if (!isAdmin) {
-      const allPlayers = [...match.teamA.players, ...match.teamB.players];
-      const isParticipant = allPlayers.some((p) => p.userId === user.userId);
-      if (!isParticipant) {
-        throw new ForbiddenException('You can only submit scores for matches you participate in');
-      }
+    const allPlayers = [...match.teamA.players, ...match.teamB.players];
+    const isParticipant = allPlayers.some((p) => p.userId === user.userId);
+    if (!isParticipant) {
+      throw new ForbiddenException('You can only submit scores for matches you participate in');
     }
 
     // Once APPROVED, block further player submissions (admin override path only)
