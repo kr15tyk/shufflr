@@ -1,0 +1,166 @@
+import { useEffect, useState } from 'react';
+import { OrgResolution, ThemeSettings, DEFAULT_THEME } from '../types/theme';
+
+/**
+ * Extracts the org slug from the current browser location.
+ *
+ * Resolution order:
+ *  1. Subdomain: `<slug>.example.com` – first label of the hostname when it
+ *     is not "www" or "localhost" and the hostname has at least three labels.
+ *  2. Path prefix: `example.com/org/<slug>` – first path segment after `/org/`.
+ *
+ * Returns `null` when no slug can be found (e.g. bare localhost dev server).
+ */
+function isIPv4Hostname(hostname: string): boolean {
+  const parts = hostname.split('.');
+  if (parts.length !== 4) {
+    return false;
+  }
+
+  return parts.every((part) => /^\d+$/.test(part) && Number(part) >= 0 && Number(part) <= 255);
+}
+
+function isIPv6Hostname(hostname: string): boolean {
+  return hostname.includes(':') || (hostname.startsWith('[') && hostname.endsWith(']'));
+}
+
+export function resolveSlugFromLocation(location: Pick<Location, 'hostname' | 'pathname'>): string | null {
+  const { hostname, pathname } = location;
+  const labels = hostname.split('.').filter(Boolean);
+
+  // Subdomain check: only resolve real tenant subdomains like slug.example.com.
+  // NOTE: 2-label custom apex domains (e.g. `myorg.io`) are not detected here
+  // and will fall through to the path-based fallback.  Supporting apex-domain
+  // tenants requires a different strategy (e.g. a dedicated lookup header set
+  // by the edge proxy) and is deferred as a post-MVP improvement.
+  if (
+    hostname !== 'localhost' &&
+    !isIPv4Hostname(hostname) &&
+    !isIPv6Hostname(hostname) &&
+    labels.length >= 3 &&
+    labels[0] !== 'www' &&
+    labels[0] !== 'localhost'
+  ) {
+    return labels[0];
+  }
+
+  // Path-based fallback: /org/<slug>
+  const match = /^\/org\/([^/]+)/.exec(pathname);
+  if (match) {
+    return match[1];
+  }
+
+  return null;
+}
+
+/** Merges API theme with defaults so callers always get a fully-typed object. */
+function mergeWithDefaults(theme: ThemeSettings): Required<ThemeSettings> {
+  return {
+    logoUrl: theme.logoUrl ?? DEFAULT_THEME.logoUrl,
+    faviconUrl: theme.faviconUrl ?? DEFAULT_THEME.faviconUrl,
+    primaryColor: theme.primaryColor ?? DEFAULT_THEME.primaryColor!,
+    secondaryColor: theme.secondaryColor ?? DEFAULT_THEME.secondaryColor!,
+    surfaceColor: theme.surfaceColor ?? DEFAULT_THEME.surfaceColor!,
+    textColor: theme.textColor ?? DEFAULT_THEME.textColor!,
+    fontHeading: theme.fontHeading ?? DEFAULT_THEME.fontHeading!,
+    fontBody: theme.fontBody ?? DEFAULT_THEME.fontBody!,
+  };
+}
+
+/** Applies a theme object to CSS custom properties on :root. */
+export function applyThemeToCss(theme: ThemeSettings): void {
+  const root = document.documentElement;
+  const merged = mergeWithDefaults(theme);
+
+  root.style.setProperty('--color-primary', merged.primaryColor);
+  root.style.setProperty('--color-secondary', merged.secondaryColor);
+  root.style.setProperty('--color-surface', merged.surfaceColor);
+  root.style.setProperty('--color-text', merged.textColor);
+  root.style.setProperty('--font-heading', merged.fontHeading);
+  root.style.setProperty('--font-body', merged.fontBody);
+}
+
+/** Updates the <link rel="icon"> favicon in <head>. */
+function applyFavicon(faviconUrl: string | null): void {
+  const existing = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+  const url = faviconUrl ?? '/vite.svg';
+
+  if (existing) {
+    existing.href = url;
+  } else {
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.href = url;
+    document.head.appendChild(link);
+  }
+}
+
+export interface TenantThemeState {
+  loading: boolean;
+  error: string | null;
+  org: OrgResolution | null;
+  slug: string | null;
+}
+
+/**
+ * Detects the current tenant from the browser URL, fetches the org's theme via
+ * `GET /api/v1/organizations/resolve?slug=<slug>`, and applies it as CSS custom
+ * properties on `:root`. Also sets the favicon.
+ *
+ * Returns the resolved org data and loading/error state for consumers.
+ */
+export function useTenantTheme(): TenantThemeState {
+  const [state, setState] = useState<TenantThemeState>({
+    loading: true,
+    error: null,
+    org: null,
+    slug: null,
+  });
+
+  // applyThemeToCss and applyFavicon are stable module-level functions, so
+  // omitting them from the dep array is safe – the linter doesn't know they
+  // can't change, hence the suppression below.  The empty array is also
+  // intentional: tenant resolution runs once on mount; the slug comes from the
+  // initial URL and SPA navigation within the same org doesn't change it.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const slug = resolveSlugFromLocation(window.location);
+
+    if (!slug) {
+      // No slug found – apply defaults (including favicon) and skip API call.
+      applyThemeToCss(DEFAULT_THEME);
+      applyFavicon(null);
+      setState({ loading: false, error: null, org: null, slug: null });
+      return;
+    }
+
+    setState((prev) => ({ ...prev, loading: true, slug }));
+
+    fetch(`/api/v1/organizations/resolve?slug=${encodeURIComponent(slug)}`)
+      .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text().catch(() => res.statusText);
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+        return res.json() as Promise<OrgResolution>;
+      })
+      .then((org) => {
+        applyThemeToCss(org.theme);
+        applyFavicon(org.theme.faviconUrl);
+        setState({ loading: false, error: null, org, slug });
+      })
+      .catch((err: unknown) => {
+        // Fall back to defaults (including favicon) so the UI still renders.
+        applyThemeToCss(DEFAULT_THEME);
+        applyFavicon(null);
+        setState({
+          loading: false,
+          error: err instanceof Error ? err.message : String(err),
+          org: null,
+          slug,
+        });
+      });
+  }, []);
+
+  return state;
+}
