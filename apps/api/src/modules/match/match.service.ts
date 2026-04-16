@@ -157,6 +157,7 @@ export class MatchService {
 
     this.eventEmitter.emit('match.result.approved', {
       matchId,
+      seasonId: match.seasonId,
       divisionId: match.divisionId,
       status: result.status,
       source: result.source,
@@ -199,4 +200,3 @@ export class MatchService {
     return result;
   }
 }
-

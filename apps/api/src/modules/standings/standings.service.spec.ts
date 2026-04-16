@@ -159,7 +159,6 @@ describe('StandingsService', () => {
   let service: StandingsService;
   let prismaMock: {
     match: {
-      findUnique: jest.Mock;
       findMany: jest.Mock;
     };
   };
@@ -167,7 +166,6 @@ describe('StandingsService', () => {
   beforeEach(async () => {
     prismaMock = {
       match: {
-        findUnique: jest.fn(),
         findMany: jest.fn(),
       },
     };
@@ -277,13 +275,16 @@ describe('StandingsService', () => {
     prismaMock.match.findMany.mockResolvedValue([
       buildMatch('m1', 'team-a', 'Team A', 'team-b', 'Team B', 5, 2),
     ]);
-    prismaMock.match.findUnique.mockResolvedValue({ seasonId: 'season-1' });
 
     // Prime the cache
     await service.getStandings('season-1', 'div-1');
 
-    // Fire the event handler (simulating an event)
-    await service.handleMatchApproved({ matchId: 'match-new', divisionId: 'div-1' });
+    // Fire the event handler (simulating an event) — seasonId now comes from payload
+    service.handleMatchApproved({
+      matchId: 'match-new',
+      seasonId: 'season-1',
+      divisionId: 'div-1',
+    });
 
     // Should re-query after cache invalidation
     await service.getStandings('season-1', 'div-1');
@@ -312,5 +313,49 @@ describe('StandingsService', () => {
         where: expect.not.objectContaining({ divisionId: expect.anything() }),
       }),
     );
+  });
+
+  it('treats an empty-string divisionId the same as omitted', async () => {
+    prismaMock.match.findMany.mockResolvedValue([]);
+
+    await service.getStandings('season-1', '');
+
+    expect(prismaMock.match.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({ divisionId: expect.anything() }),
+      }),
+    );
+  });
+
+  it('uses teamId as final tiebreaker when all other stats and name are equal', async () => {
+    // Two teams with identical stats and the same name — teamId breaks the tie
+    const teams: TeamStats[] = [
+      {
+        teamId: 'zzz',
+        teamName: 'Same Name',
+        wins: 1,
+        losses: 0,
+        ties: 0,
+        pointsScored: 10,
+        pointsAllowed: 5,
+        pointDifferential: 5,
+        winPercentage: 1,
+      },
+      {
+        teamId: 'aaa',
+        teamName: 'Same Name',
+        wins: 1,
+        losses: 0,
+        ties: 0,
+        pointsScored: 10,
+        pointsAllowed: 5,
+        pointDifferential: 5,
+        winPercentage: 1,
+      },
+    ];
+
+    const ranked = rankTeams(teams);
+    expect(ranked[0].teamId).toBe('aaa');
+    expect(ranked[1].teamId).toBe('zzz');
   });
 });

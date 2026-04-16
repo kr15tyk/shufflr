@@ -7,6 +7,7 @@ export class StandingsController {
 
   @Get(':id/standings')
   getStandings(@Param('id') id: string, @Query('divisionId') divisionId?: string) {
+    // Pass raw value; StandingsService normalizes blank strings to undefined
     return this.standingsService.getStandings(id, divisionId);
   }
 }

@@ -19,12 +19,15 @@ export interface RankedTeamStats extends TeamStats {
   rank: number;
 }
 
+const nameCollator = new Intl.Collator('en', { sensitivity: 'base' });
+
 /**
  * Pure function that sorts team stats by the deterministic tiebreaker chain:
  *   1. wins (desc)
  *   2. pointDifferential (desc)
  *   3. pointsScored (desc)
- *   4. teamName (asc) — guarantees full stability
+ *   4. teamName (asc, locale-insensitive, fixed locale)
+ *   5. teamId (asc) — final stable tiebreaker when names are identical
  */
 export function rankTeams(teams: TeamStats[]): RankedTeamStats[] {
   return [...teams]
@@ -33,13 +36,16 @@ export function rankTeams(teams: TeamStats[]): RankedTeamStats[] {
       if (b.pointDifferential !== a.pointDifferential)
         return b.pointDifferential - a.pointDifferential;
       if (b.pointsScored !== a.pointsScored) return b.pointsScored - a.pointsScored;
-      return a.teamName.localeCompare(b.teamName);
+      const nameOrder = nameCollator.compare(a.teamName, b.teamName);
+      if (nameOrder !== 0) return nameOrder;
+      return a.teamId < b.teamId ? -1 : a.teamId > b.teamId ? 1 : 0;
     })
     .map((team, index) => ({ ...team, rank: index + 1 }));
 }
 
 interface MatchApprovedPayload {
   matchId: string;
+  seasonId: string;
   divisionId: string;
 }
 
@@ -56,29 +62,29 @@ export class StandingsService {
   constructor(private readonly prisma: PrismaService) {}
 
   @OnEvent('match.result.approved')
-  async handleMatchApproved(payload: MatchApprovedPayload): Promise<void> {
-    const match = await this.prisma.match.findUnique({
-      where: { id: payload.matchId },
-      select: { seasonId: true },
-    });
-
-    if (match) {
-      this.invalidateCache(match.seasonId, payload.divisionId);
-    }
+  handleMatchApproved(payload: MatchApprovedPayload): void {
+    this.invalidateCache(payload.seasonId, payload.divisionId);
   }
 
   async getStandings(seasonId: string, divisionId?: string): Promise<RankedTeamStats[]> {
-    const cacheKey = `${seasonId}:${divisionId ?? '*'}`;
+    // Normalize: treat blank/empty string the same as omitted
+    const normalizedDivisionId = divisionId?.trim() || undefined;
+    const cacheKey = `${seasonId}:${normalizedDivisionId ?? '*'}`;
+
     const cached = this.cache.get(cacheKey);
-    if (cached && cached.expiresAt > Date.now()) {
-      return cached.data;
+    if (cached) {
+      if (cached.expiresAt > Date.now()) {
+        return cached.data;
+      }
+      // Remove stale entry on read to prevent unbounded Map growth
+      this.cache.delete(cacheKey);
     }
 
     const matches = await this.prisma.match.findMany({
       where: {
         seasonId,
-        ...(divisionId ? { divisionId } : {}),
-        result: { status: ResultStatus.APPROVED },
+        ...(normalizedDivisionId ? { divisionId: normalizedDivisionId } : {}),
+        result: { is: { status: ResultStatus.APPROVED } },
       },
       include: {
         result: true,
