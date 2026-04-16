@@ -6,7 +6,6 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('organizations/:orgId/theme')
 export class ThemeController {
@@ -23,9 +22,11 @@ export class ThemeController {
   updateTheme(
     @Param('orgId') orgId: string,
     @Body() dto: UpdateThemeSettingsDto,
-    @CurrentUser() user: { userId: string; roles: Role[] },
     @Req() req: Request,
   ) {
-    return this.themeService.updateTheme(orgId, dto, user.userId, req.orgId);
+    // req.orgId holds the subdomain set by TenantMiddleware (x-org-subdomain header).
+    // Rename locally to avoid confusion with the orgId path param (UUID).
+    const tenantSubdomain = req.orgId;
+    return this.themeService.updateTheme(orgId, dto, tenantSubdomain);
   }
 }

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, Matches } from 'class-validator';
+import { IsString, IsOptional, Matches, ValidateIf } from 'class-validator';
 
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
 
@@ -11,32 +11,34 @@ export class UpdateThemeSettingsDto {
   @IsOptional()
   faviconUrl?: string;
 
+  // Use ValidateIf instead of @IsOptional so that an explicit null is still
+  // validated (and rejected by @IsString), while undefined skips validation.
+  @ValidateIf((_, value) => value !== undefined)
   @IsString()
   @Matches(HEX_COLOR_REGEX, {
     message: 'primaryColor must be a valid hex color (e.g. #FFF or #FFFFFF)',
   })
-  @IsOptional()
   primaryColor?: string;
 
+  @ValidateIf((_, value) => value !== undefined)
   @IsString()
   @Matches(HEX_COLOR_REGEX, {
     message: 'secondaryColor must be a valid hex color (e.g. #FFF or #FFFFFF)',
   })
-  @IsOptional()
   secondaryColor?: string;
 
+  @ValidateIf((_, value) => value !== undefined)
   @IsString()
   @Matches(HEX_COLOR_REGEX, {
     message: 'surfaceColor must be a valid hex color (e.g. #FFF or #FFFFFF)',
   })
-  @IsOptional()
   surfaceColor?: string;
 
+  @ValidateIf((_, value) => value !== undefined)
   @IsString()
   @Matches(HEX_COLOR_REGEX, {
     message: 'textColor must be a valid hex color (e.g. #FFF or #FFFFFF)',
   })
-  @IsOptional()
   textColor?: string;
 
   @IsString()

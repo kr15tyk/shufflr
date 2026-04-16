@@ -13,6 +13,19 @@ export const DEFAULT_THEME = {
   fontBody: null,
 };
 
+/** Public-facing fields returned by both GET and PATCH – no internal DB columns. */
+const THEME_SELECT = {
+  organizationId: true,
+  logoUrl: true,
+  faviconUrl: true,
+  primaryColor: true,
+  secondaryColor: true,
+  surfaceColor: true,
+  textColor: true,
+  fontHeading: true,
+  fontBody: true,
+} as const;
+
 @Injectable()
 export class ThemeService {
   constructor(private readonly prisma: PrismaService) {}
@@ -20,20 +33,20 @@ export class ThemeService {
   async getTheme(orgId: string) {
     const org = await this.prisma.organization.findUnique({
       where: { id: orgId },
-      include: { themeSettings: true },
+      include: { themeSettings: { select: THEME_SELECT } },
     });
 
     if (!org) {
       throw new NotFoundException(`Organization ${orgId} not found`);
     }
 
+    // Return stored theme or sensible defaults – both paths have the same shape.
     return org.themeSettings ?? { organizationId: orgId, ...DEFAULT_THEME };
   }
 
   async updateTheme(
     orgId: string,
     dto: UpdateThemeSettingsDto,
-    _requestingUserId: string,
     tenantSubdomain: string | undefined,
   ) {
     const org = await this.prisma.organization.findUnique({
@@ -44,8 +57,13 @@ export class ThemeService {
       throw new NotFoundException(`Organization ${orgId} not found`);
     }
 
-    // Validate that the request comes from the same tenant (subdomain check)
-    if (tenantSubdomain && org.subdomain !== tenantSubdomain) {
+    // Tenant scoping: require a subdomain context and verify it matches the target
+    // org. Fail closed – omitting the x-org-subdomain header is not allowed.
+    if (!tenantSubdomain) {
+      throw new ForbiddenException('Tenant context is required to update organization theme');
+    }
+
+    if (org.subdomain !== tenantSubdomain) {
       throw new ForbiddenException('You can only update your own organization theme');
     }
 
@@ -65,13 +83,16 @@ export class ThemeService {
       update: {
         ...(dto.logoUrl !== undefined && { logoUrl: dto.logoUrl }),
         ...(dto.faviconUrl !== undefined && { faviconUrl: dto.faviconUrl }),
-        ...(dto.primaryColor !== undefined && { primaryColor: dto.primaryColor }),
-        ...(dto.secondaryColor !== undefined && { secondaryColor: dto.secondaryColor }),
+        ...(dto.primaryColor !== undefined &&
+          dto.primaryColor !== null && { primaryColor: dto.primaryColor }),
+        ...(dto.secondaryColor !== undefined &&
+          dto.secondaryColor !== null && { secondaryColor: dto.secondaryColor }),
         ...(dto.surfaceColor !== undefined && { surfaceColor: dto.surfaceColor }),
         ...(dto.textColor !== undefined && { textColor: dto.textColor }),
         ...(dto.fontHeading !== undefined && { fontHeading: dto.fontHeading }),
         ...(dto.fontBody !== undefined && { fontBody: dto.fontBody }),
       },
+      select: THEME_SELECT,
     });
 
     return themeSettings;

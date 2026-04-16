@@ -49,9 +49,9 @@ describe('ThemeService', () => {
       });
     });
 
-    it('returns the stored theme when one exists', async () => {
+    it('returns the stored theme without internal DB columns (no id/timestamps)', async () => {
+      // Prisma select omits id/createdAt/updatedAt – mock returns the selected shape.
       const stored = {
-        id: 'theme-1',
         organizationId: 'org-1',
         primaryColor: '#FF0000',
         secondaryColor: '#00FF00',
@@ -72,6 +72,9 @@ describe('ThemeService', () => {
       const result = await service.getTheme('org-1');
 
       expect(result).toEqual(stored);
+      expect(result).not.toHaveProperty('id');
+      expect(result).not.toHaveProperty('createdAt');
+      expect(result).not.toHaveProperty('updatedAt');
     });
 
     it('throws NotFoundException for an unknown org', async () => {
@@ -91,7 +94,6 @@ describe('ThemeService', () => {
       });
 
       const updatedTheme = {
-        id: 'theme-1',
         organizationId: 'org-1',
         primaryColor: '#123456',
         secondaryColor: '#654321',
@@ -107,11 +109,11 @@ describe('ThemeService', () => {
       const result = await service.updateTheme(
         'org-1',
         { primaryColor: '#123456', secondaryColor: '#654321' },
-        'user-1',
         'demo',
       );
 
       expect(result).toEqual(updatedTheme);
+      expect(result).not.toHaveProperty('id');
       expect(prismaMock.themeSettings.upsert).toHaveBeenCalledTimes(1);
     });
 
@@ -123,35 +125,32 @@ describe('ThemeService', () => {
 
       // User belongs to 'org-a' tenant, but tries to update 'org-b'
       await expect(
-        service.updateTheme('org-b', { primaryColor: '#AABBCC' }, 'user-from-a', 'org-a'),
+        service.updateTheme('org-b', { primaryColor: '#AABBCC' }, 'org-a'),
       ).rejects.toThrow(ForbiddenException);
 
       expect(prismaMock.themeSettings.upsert).not.toHaveBeenCalled();
     });
 
-    it('allows update when no subdomain context is present (e.g. SUPER_ADMIN via direct API)', async () => {
+    it('throws ForbiddenException when no tenant subdomain context is present', async () => {
       prismaMock.organization.findUnique.mockResolvedValue({
         id: 'org-1',
         subdomain: 'demo',
       });
 
-      prismaMock.themeSettings.upsert.mockResolvedValue({
-        id: 'theme-1',
-        organizationId: 'org-1',
-        primaryColor: '#AABBCC',
-        secondaryColor: '#4F46E5',
-      });
-
+      // Omitting x-org-subdomain header means tenantSubdomain is undefined.
+      // The check must fail closed to prevent unauthorized cross-org updates.
       await expect(
-        service.updateTheme('org-1', { primaryColor: '#AABBCC' }, 'admin-user', undefined),
-      ).resolves.toBeDefined();
+        service.updateTheme('org-1', { primaryColor: '#AABBCC' }, undefined),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(prismaMock.themeSettings.upsert).not.toHaveBeenCalled();
     });
 
     it('throws NotFoundException when org does not exist', async () => {
       prismaMock.organization.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.updateTheme('missing-org', { primaryColor: '#FFFFFF' }, 'user-1', 'demo'),
+        service.updateTheme('missing-org', { primaryColor: '#FFFFFF' }, 'demo'),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -167,12 +166,7 @@ describe('ThemeService', () => {
         secondaryColor: DEFAULT_THEME.secondaryColor,
       });
 
-      await service.updateTheme(
-        'org-1',
-        { logoUrl: 'https://example.com/logo.png' },
-        'user-1',
-        'demo',
-      );
+      await service.updateTheme('org-1', { logoUrl: 'https://example.com/logo.png' }, 'demo');
 
       expect(prismaMock.themeSettings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -180,6 +174,37 @@ describe('ThemeService', () => {
             primaryColor: DEFAULT_THEME.primaryColor,
             secondaryColor: DEFAULT_THEME.secondaryColor,
           }),
+        }),
+      );
+    });
+
+    it('does not include null primaryColor/secondaryColor in the update payload', async () => {
+      prismaMock.organization.findUnique.mockResolvedValue({
+        id: 'org-1',
+        subdomain: 'demo',
+      });
+      prismaMock.themeSettings.upsert.mockResolvedValue({
+        organizationId: 'org-1',
+        primaryColor: DEFAULT_THEME.primaryColor,
+        secondaryColor: DEFAULT_THEME.secondaryColor,
+      });
+
+      // The DTO type allows null to be passed programmatically (e.g. in tests).
+      // The service must not propagate null to the DB for non-nullable fields.
+      await service.updateTheme(
+        'org-1',
+        { primaryColor: null as unknown as string, secondaryColor: null as unknown as string },
+        'demo',
+      );
+
+      expect(prismaMock.themeSettings.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.not.objectContaining({ primaryColor: null }),
+        }),
+      );
+      expect(prismaMock.themeSettings.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.not.objectContaining({ secondaryColor: null }),
         }),
       );
     });
