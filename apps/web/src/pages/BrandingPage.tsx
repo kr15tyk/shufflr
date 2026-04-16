@@ -266,6 +266,26 @@ export function BrandingPage(): React.JSX.Element {
       return;
     }
 
+    // Validate URL fields before sending them to the API.
+    const urlErrors: string[] = [];
+    for (const [field, label] of [
+      ['logoUrl', 'Logo URL'],
+      ['faviconUrl', 'Favicon URL'],
+    ] as const) {
+      const raw = form[field];
+      if (raw) {
+        try {
+          new URL(raw);
+        } catch {
+          urlErrors.push(`${label} is not a valid URL.`);
+        }
+      }
+    }
+    if (urlErrors.length > 0) {
+      setSaveError(urlErrors.join(' '));
+      return;
+    }
+
     setSaving(true);
     setSaveError(null);
     setSaveSuccess(false);

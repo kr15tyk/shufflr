@@ -29,6 +29,10 @@ export function resolveSlugFromLocation(location: Pick<Location, 'hostname' | 'p
   const labels = hostname.split('.').filter(Boolean);
 
   // Subdomain check: only resolve real tenant subdomains like slug.example.com.
+  // NOTE: 2-label custom apex domains (e.g. `myorg.io`) are not detected here
+  // and will fall through to the path-based fallback.  Supporting apex-domain
+  // tenants requires a different strategy (e.g. a dedicated lookup header set
+  // by the edge proxy) and is deferred as a post-MVP improvement.
   if (
     hostname !== 'localhost' &&
     !isIPv4Hostname(hostname) &&
@@ -113,10 +117,11 @@ export function useTenantTheme(): TenantThemeState {
     slug: null,
   });
 
-  // The empty dependency array is intentional: tenant resolution happens once
-  // on page load. The org slug is derived from the initial URL; SPA navigation
-  // within the same org does not change the tenant, so re-running on every
-  // render would be redundant.
+  // applyThemeToCss and applyFavicon are stable module-level functions, so
+  // omitting them from the dep array is safe – the linter doesn't know they
+  // can't change, hence the suppression below.  The empty array is also
+  // intentional: tenant resolution runs once on mount; the slug comes from the
+  // initial URL and SPA navigation within the same org doesn't change it.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const slug = resolveSlugFromLocation(window.location);
