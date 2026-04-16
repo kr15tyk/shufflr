@@ -6,17 +6,37 @@ import { OrgResolution, ThemeSettings, DEFAULT_THEME } from '../types/theme';
  *
  * Resolution order:
  *  1. Subdomain: `<slug>.example.com` – first label of the hostname when it
- *     is not "www" or "localhost" and the hostname has more than one label.
+ *     is not "www" or "localhost" and the hostname has at least three labels.
  *  2. Path prefix: `example.com/org/<slug>` – first path segment after `/org/`.
  *
  * Returns `null` when no slug can be found (e.g. bare localhost dev server).
  */
+function isIPv4Hostname(hostname: string): boolean {
+  const parts = hostname.split('.');
+  if (parts.length !== 4) {
+    return false;
+  }
+
+  return parts.every((part) => /^\d+$/.test(part) && Number(part) >= 0 && Number(part) <= 255);
+}
+
+function isIPv6Hostname(hostname: string): boolean {
+  return hostname.includes(':') || (hostname.startsWith('[') && hostname.endsWith(']'));
+}
+
 export function resolveSlugFromLocation(location: Pick<Location, 'hostname' | 'pathname'>): string | null {
   const { hostname, pathname } = location;
-  const labels = hostname.split('.');
+  const labels = hostname.split('.').filter(Boolean);
 
-  // Subdomain check: must have at least 2 labels and not be "www" or "localhost"
-  if (labels.length >= 2 && labels[0] !== 'www' && labels[0] !== 'localhost') {
+  // Subdomain check: only resolve real tenant subdomains like slug.example.com.
+  if (
+    hostname !== 'localhost' &&
+    !isIPv4Hostname(hostname) &&
+    !isIPv6Hostname(hostname) &&
+    labels.length >= 3 &&
+    labels[0] !== 'www' &&
+    labels[0] !== 'localhost'
+  ) {
     return labels[0];
   }
 
