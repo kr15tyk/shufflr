@@ -186,7 +186,7 @@ export class MatchService {
       where: { matchId },
       data: {
         status: ResultStatus.REJECTED,
-        approvedById: user.userId,
+        approvedById: null,
         rejectionReason: dto.rejectionReason ?? null,
       },
     });
